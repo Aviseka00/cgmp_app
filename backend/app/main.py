@@ -16,9 +16,13 @@ from .db import db, ensure_indexes, ping_mongo
 from .routers import router
 from .security import get_password_hash
 
-# SPA on disk (three levels up from backend/app/main.py → cgmp_app/frontend).
+# SPA on disk: repo checkout has frontend next to backend/; Docker copies frontend to /app/frontend.
 _HERE = Path(__file__).resolve()
-_INDEX_HTML = _HERE.parent.parent.parent / "frontend" / "index.html"
+_SPA_CANDIDATES = (
+    _HERE.parent.parent.parent / "frontend" / "index.html",
+    _HERE.parent.parent / "frontend" / "index.html",
+)
+_INDEX_HTML = next((p for p in _SPA_CANDIDATES if p.is_file()), _SPA_CANDIDATES[0])
 
 # StaticFiles requires these paths at import time; keep in sync with lifespan.
 os.makedirs(settings.uploads_dir, exist_ok=True)
