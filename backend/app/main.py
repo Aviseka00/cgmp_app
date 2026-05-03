@@ -9,6 +9,7 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from pymongo.errors import ServerSelectionTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config import settings
@@ -41,7 +42,24 @@ async def lifespan(app: FastAPI):
     os.makedirs(settings.registry_dir, exist_ok=True)
     os.makedirs(os.path.join(settings.registry_dir, "users"), exist_ok=True)
     os.makedirs(os.path.join(settings.registry_dir, "batches"), exist_ok=True)
-    await ensure_indexes()
+    # Render (and similar hosts) have no MongoDB on localhost — require Atlas or another remote URI.
+    if os.environ.get("RENDER") == "true":
+        uri_l = (settings.mongodb_uri or "").lower()
+        if "localhost" in uri_l or "127.0.0.1" in uri_l:
+            raise RuntimeError(
+                "Set MONGODB_URI in Render Environment to your MongoDB Atlas connection string "
+                "(MongoDB Atlas free tier: https://www.mongodb.com/atlas → Database → Connect → Drivers). "
+                "Network Access must allow connections from the internet (e.g. 0.0.0.0/0 for testing). "
+                "Default mongodb://localhost:27017 does not work on Render."
+            )
+    try:
+        await ensure_indexes()
+    except ServerSelectionTimeoutError as e:
+        raise RuntimeError(
+            "Cannot connect to MongoDB. Set MONGODB_URI to a reachable server (MongoDB Atlas recommended). "
+            "Ensure the URI includes authentication and the cluster allows inbound connections. "
+            f"Underlying error: {e}"
+        ) from e
     disable_seed = os.getenv("DISABLE_SEED_ADMIN", "").strip().lower() in ("1", "true", "yes")
     if not disable_seed:
         admin = await db.users.find_one({"username": "admin"})
