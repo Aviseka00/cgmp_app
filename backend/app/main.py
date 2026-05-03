@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pymongo.errors import ServerSelectionTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from .config import settings
 from .db import db, ensure_indexes, ping_mongo
@@ -139,6 +140,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Render / reverse proxies send X-Forwarded-Proto; trust proxy so redirects and absolute URLs stay HTTPS.
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 
 def _spa_index_response(request: Request) -> Response:

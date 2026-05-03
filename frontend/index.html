@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Optional: set value to full API root without trailing /api, e.g. https://app.example.com — defaults to same origin. -->
+  <!-- Optional split API: origin only (https://api.example.com) or full root including /api. Empty = same host /api. -->
   <meta name="cgmp-api-base" content="" />
   <title>cGMP Cell Analysis Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1049,23 +1049,44 @@
   <div id="toastStack" aria-live="polite" aria-relevant="additions"></div>
 
   <script>
+    /** Normalize user-provided API root to .../api (no trailing slash). */
+    function normalizeApiRoot(raw) {
+      let u = String(raw || "").trim().replace(/\/+$/, "");
+      if (!u) return null;
+      if (/\/api$/i.test(u)) return u;
+      return u + "/api";
+    }
+    /** API base URL without trailing slash; paths joined via apiJoin(). */
     const API = (() => {
       try {
         const m = document.querySelector('meta[name="cgmp-api-base"]');
         const mb = m && m.getAttribute("content");
-        if (mb && String(mb).trim()) return String(mb).trim().replace(/\/+$/, "") + "/api";
+        const nu = normalizeApiRoot(mb);
+        if (nu) return nu;
       } catch (e) {}
       try {
         const o = new URLSearchParams(window.location.search).get("api_base");
-        if (o) return o.replace(/\/+$/, "") + "/api";
+        const nu = normalizeApiRoot(o);
+        if (nu) return nu;
       } catch (e) {}
       if (window.location.protocol === "file:") {
-        const q = new URLSearchParams(window.location.search).get("api_base");
-        if (q) return q.replace(/\/+$/, "") + "/api";
+        try {
+          const q = new URLSearchParams(window.location.search).get("api_base");
+          const nu = normalizeApiRoot(q);
+          if (nu) return nu;
+        } catch (e) {}
         return "http://127.0.0.1:8000/api";
       }
-      return `${window.location.origin}/api`;
+      try {
+        return new URL("/api", window.location.origin).href.replace(/\/+$/, "");
+      } catch (e) {
+        return `${window.location.protocol}//${window.location.host}/api`.replace(/\/+$/, "");
+      }
     })();
+    function apiJoin(path) {
+      const p = String(path || "").startsWith("/") ? path : "/" + path;
+      return API.replace(/\/+$/, "") + p;
+    }
     let token = "";
     let role = "";
     let currentUsername = "";
@@ -1136,10 +1157,25 @@
     }
 
     async function api(url, opts = {}) {
-      const res = await fetch(API + url, {
-        ...opts,
-        headers: { ...(opts.headers || {}), ...authHeaders() },
-      });
+      const href = apiJoin(url);
+      let res;
+      try {
+        res = await fetch(href, {
+          ...opts,
+          headers: { ...(opts.headers || {}), ...authHeaders() },
+          mode: "cors",
+          credentials: "omit",
+        });
+      } catch (err) {
+        const isFailFetch = err instanceof TypeError && String(err.message || "").toLowerCase().includes("fetch");
+        throw new Error(
+          isFailFetch
+            ? `Cannot reach API (${href}). If the service just started, wait a few seconds and retry. For a split API host, set meta cgmp-api-base or ?api_base= to the API origin.`
+            : err && err.message
+              ? err.message
+              : "Network error"
+        );
+      }
       const rawText = await res.text();
       let data = {};
       if (rawText) {
@@ -1524,8 +1560,10 @@
         return;
       }
       try {
-        const res = await fetch(API + "/archive/analysis-report/" + encodeURIComponent(archiveId) + "/pdf", {
+        const res = await fetch(apiJoin("/archive/analysis-report/" + encodeURIComponent(archiveId) + "/pdf"), {
           headers: { ...authHeaders() },
+          mode: "cors",
+          credentials: "omit",
         });
         if (!res.ok) {
           const raw = await res.text();
@@ -2429,10 +2467,10 @@
       let res;
       let data;
       try {
-        res = await fetch(API + "/auth/login", { method: "POST", body: fd });
+        res = await fetch(apiJoin("/auth/login"), { method: "POST", body: fd, mode: "cors", credentials: "omit" });
         data = await res.json().catch(() => ({}));
       } catch (err) {
-        showToast("Network error — is the API running?", "danger");
+        showToast(err.message || "Network error — is the API running?", "danger");
         return;
       }
       if (!res.ok) return showToast(parseDetail(data), "danger");
