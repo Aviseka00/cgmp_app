@@ -10,6 +10,7 @@ pydantic-settings
 jinja2
 fpdf2
 numpy
+Pillow
 opencv-python-headless
 torch
 segmentation-models-pytorch

@@ -6,6 +6,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
+from PIL import Image, ImageOps
 
 from .config import settings
 
@@ -151,11 +152,45 @@ def _annotate_overlay_with_counts(
         )
 
 
+def _load_image_bgr(input_path: str) -> np.ndarray:
+    """
+    Load a BGR uint8 image for OpenCV / model input.
+    cv2.imread alone often returns None for CMYK JPEGs, some progressive JPEGs, or odd TIFF/WebP cases;
+    imdecode + Pillow cover most uploads that browsers accept.
+    """
+    if not os.path.isfile(input_path):
+        raise FileNotFoundError(f"Image file not found: {input_path}")
+    size = os.path.getsize(input_path)
+    if size == 0:
+        raise ValueError(f"Image file is empty: {input_path}")
+
+    bgr = cv2.imread(input_path, cv2.IMREAD_COLOR)
+    if bgr is not None:
+        return bgr
+
+    raw = np.fromfile(input_path, dtype=np.uint8)
+    if raw.size > 0:
+        decoded = cv2.imdecode(raw, cv2.IMREAD_COLOR)
+        if decoded is not None:
+            return decoded
+
+    try:
+        with Image.open(input_path) as im:
+            im = ImageOps.exif_transpose(im)
+            rgb = np.asarray(im.convert("RGB"))
+    except Exception as e:
+        raise ValueError(
+            f"Could not read image: {input_path}. "
+            f"OpenCV could not decode the file; Pillow error: {e}. "
+            "Export as RGB JPEG or PNG if this keeps happening."
+        ) from e
+
+    return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+
 def analyze_image(input_path: str, out_mask_path: str, out_heatmap_path: str) -> dict:
     model, device = get_model_bundle()
-    bgr = cv2.imread(input_path, cv2.IMREAD_COLOR)
-    if bgr is None:
-        raise ValueError(f"Could not read image: {input_path}")
+    bgr = _load_image_bgr(input_path)
     prob = predict_full_image(
         model,
         bgr,
