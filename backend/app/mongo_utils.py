@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from bson import ObjectId
@@ -28,6 +29,8 @@ def serialize_document(doc: dict[str, Any]) -> dict[str, Any]:
                 serialize_document(i) if isinstance(i, dict) else (str(i) if isinstance(i, ObjectId) else i)
                 for i in v
             ]
+        elif isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            out[k] = None
         else:
             out[k] = v
     return out

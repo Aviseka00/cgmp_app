@@ -1129,14 +1129,7 @@
         document.getElementById("whoami").textContent = `${currentUsername} · ${role}`;
         enterAppShell();
         applyRoleUi();
-        await refreshDashboard();
-        await refreshBatches();
-        await refreshArchive();
-        await refreshReviewQueue();
-        if (role === "admin") await refreshUsers();
-        await refreshNotifications();
-        await refreshLandingCards();
-        if (role === "user") await refreshUserSubmittedList();
+        await refreshWorkspacePanels({ silent: true });
       } catch (e) {
         token = "";
         role = "";
@@ -2124,6 +2117,26 @@
         .join("");
     }
 
+    /** After login or password change: load workspace tabs; failures are non-fatal (warn unless silent). */
+    async function refreshWorkspacePanels(opts) {
+      const silent = opts && opts.silent;
+      const run = async (label, fn) => {
+        try {
+          await fn();
+        } catch (err) {
+          if (!silent) showToast(`${label}: ${err.message || "request failed"}`, "warning");
+        }
+      };
+      await run("Dashboard", refreshDashboard);
+      await run("Batches", refreshBatches);
+      await run("Archive", refreshArchive);
+      await run("Review queue", refreshReviewQueue);
+      await run("Users", refreshUsers);
+      await run("Notifications", refreshNotifications);
+      await run("Summary cards", refreshLandingCards);
+      if (role === "user") await run("Submissions", refreshUserSubmittedList);
+    }
+
     async function refreshArchive() {
       const items = await api("/archive/analysis-history?limit=80");
       if (!items.length) {
@@ -2483,19 +2496,16 @@
         document.getElementById("mustChangeOverlay").classList.remove("hidden");
         enterAppShell();
         applyRoleUi();
-        await refreshDashboard();
+        try {
+          await refreshDashboard();
+        } catch (err) {
+          showToast(err.message || "Dashboard could not load", "warning");
+        }
         return;
       }
       enterAppShell();
       applyRoleUi();
-      await refreshDashboard();
-      await refreshBatches();
-      await refreshArchive();
-      await refreshReviewQueue();
-      await refreshUsers();
-      await refreshNotifications();
-      await refreshLandingCards();
-      if (role === "user") await refreshUserSubmittedList();
+      await refreshWorkspacePanels({ silent: false });
     };
 
     document.getElementById("forcedPwForm").onsubmit = async (e) => {
@@ -2513,14 +2523,7 @@
       document.getElementById("mustChangeOverlay").classList.add("hidden");
       showToast("Password updated.", "success");
       applyRoleUi();
-      await refreshDashboard();
-      await refreshBatches();
-      await refreshArchive();
-      await refreshReviewQueue();
-      await refreshUsers();
-      await refreshNotifications();
-      await refreshLandingCards();
-      if (role === "user") await refreshUserSubmittedList();
+      await refreshWorkspacePanels({ silent: false });
     };
 
     document.getElementById("btnChangePw").onclick = () => document.getElementById("modalChangePw").classList.remove("hidden");
