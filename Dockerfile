@@ -19,8 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/app /app/app
 COPY frontend /app/frontend
 COPY cell_detection /opt/cell_detection
-
-RUN mkdir -p /app/weights
+COPY weights /app/weights
 
 EXPOSE 8000
 

@@ -17,9 +17,9 @@ build/
 .env
 !.env.example
 
-# Large model weights (optional local copy)
-weights/
-*.pth
+# Extra weight files only (bundled default: weights/production_model.pth is tracked)
+weights/*.pth
+!weights/production_model.pth
 
 # Runtime data (do not commit)
 backend/uploads/
