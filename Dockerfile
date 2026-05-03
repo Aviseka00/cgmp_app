@@ -20,6 +20,8 @@ COPY backend/app /app/app
 COPY frontend /app/frontend
 COPY cell_detection /opt/cell_detection
 
+RUN mkdir -p /app/weights
+
 EXPOSE 8000
 
 # Match inference imports (see backend/app/inference.py)

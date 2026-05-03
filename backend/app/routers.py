@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import secrets
@@ -23,6 +24,8 @@ from .security import create_access_token, get_password_hash, verify_password
 
 
 router = APIRouter()
+
+_log = logging.getLogger("uvicorn.error")
 
 
 def _registry_users_dir() -> str:
@@ -637,6 +640,16 @@ async def analyze_batch(
     if not images:
         raise HTTPException(status_code=400, detail="No images uploaded")
 
+    if not os.path.isfile(settings.best_model_path):
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Model checkpoint is not on the server. Add production_model.pth and set environment variable "
+                "BEST_MODEL_PATH to its full path, or set MODEL_DOWNLOAD_URL to a direct HTTPS link to the .pth file "
+                f"(Render: add a persistent disk under /app/weights if needed). Currently expected: {settings.best_model_path!r}."
+            ),
+        )
+
     out_dir = os.path.join(settings.processed_dir, batch["batch_code"])
     os.makedirs(out_dir, exist_ok=True)
     total_cells = 0
@@ -646,7 +659,17 @@ async def analyze_batch(
         stem = os.path.splitext(image["filename"])[0]
         mask_path = os.path.join(out_dir, f"{stem}_mask.png")
         heatmap_path = os.path.join(out_dir, f"{stem}_heatmap.png")
-        res = analyze_image(image["input_path"], mask_path, heatmap_path)
+        try:
+            res = analyze_image(image["input_path"], mask_path, heatmap_path)
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except Exception as e:
+            _log.exception("analyze_image failed for %s", image.get("filename"))
+            raise HTTPException(
+                status_code=500,
+                detail=f"Analysis failed: {type(e).__name__}: {e}. "
+                "If memory errors occur, upgrade the Render instance or reduce image size.",
+            ) from e
         res["mask_url"] = _processed_path_to_url(mask_path)
         res["heatmap_url"] = _processed_path_to_url(heatmap_path)
         await db.images.update_one(

@@ -3,10 +3,24 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# backend/ directory (contains uploads/, app/, etc.)
+# backend/ directory (contains app/, uploads/, etc.) — in Docker this is WORKDIR /app
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
-# cgmp_app/ (repository folder)
-_REPO_ROOT = _BACKEND_ROOT.parent
+
+
+def _detect_repo_root(backend_root: Path) -> Path:
+    """
+    Local dev: .../cgmp_app/backend with frontend in .../cgmp_app/frontend.
+    Docker: app code and frontend are both under /app (see root Dockerfile).
+    """
+    if (backend_root / "frontend").is_dir():
+        return backend_root
+    parent = backend_root.parent
+    if (parent / "frontend").is_dir():
+        return parent
+    return parent
+
+
+_REPO_ROOT = _detect_repo_root(_BACKEND_ROOT)
 
 
 class Settings(BaseSettings):

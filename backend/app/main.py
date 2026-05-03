@@ -25,6 +25,34 @@ _SPA_CANDIDATES = (
 )
 _INDEX_HTML = next((p for p in _SPA_CANDIDATES if p.is_file()), _SPA_CANDIDATES[0])
 
+def _maybe_download_model_checkpoint() -> None:
+    """
+    If MODEL_DOWNLOAD_URL is set and the checkpoint is missing, download it once (e.g. Render + public URL).
+    """
+    url = (os.getenv("MODEL_DOWNLOAD_URL") or "").strip()
+    if not url:
+        return
+    path = Path(settings.best_model_path)
+    if path.is_file():
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _logm = logging.getLogger("uvicorn.error")
+    _logm.info("Downloading model from MODEL_DOWNLOAD_URL to %s", path)
+    try:
+        import urllib.request
+
+        req = urllib.request.Request(url, headers={"User-Agent": "cgmp-cell-app/1.0"})
+        with urllib.request.urlopen(req, timeout=1200) as resp, open(path, "wb") as out:
+            while True:
+                chunk = resp.read(8 * 1024 * 1024)
+                if not chunk:
+                    break
+                out.write(chunk)
+        _logm.info("Model saved (%s bytes)", path.stat().st_size)
+    except Exception as e:
+        _logm.warning("MODEL_DOWNLOAD_URL failed (analysis needs BEST_MODEL_PATH until fixed): %s", e)
+
+
 # StaticFiles requires these paths at import time; keep in sync with lifespan.
 os.makedirs(settings.uploads_dir, exist_ok=True)
 os.makedirs(settings.processed_dir, exist_ok=True)
@@ -60,6 +88,7 @@ async def lifespan(app: FastAPI):
             "Ensure the URI includes authentication and the cluster allows inbound connections. "
             f"Underlying error: {e}"
         ) from e
+    _maybe_download_model_checkpoint()
     disable_seed = os.getenv("DISABLE_SEED_ADMIN", "").strip().lower() in ("1", "true", "yes")
     if not disable_seed:
         admin = await db.users.find_one({"username": "admin"})
