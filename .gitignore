@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Local env and secrets
+.env
+!.env.example
+
+# Runtime data (do not commit)
+backend/uploads/
+backend/processed_images/
+backend/reports/
+backend/registry/
+backend_data/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log

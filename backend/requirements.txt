@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+motor
+pymongo
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic
+pydantic-settings
+jinja2
+fpdf2
+numpy
+opencv-python-headless
+torch
+segmentation-models-pytorch

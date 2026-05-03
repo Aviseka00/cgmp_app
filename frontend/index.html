@@ -1,0 +1,2806 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Optional: set value to full API root without trailing /api, e.g. https://app.example.com — defaults to same origin. -->
+  <meta name="cgmp-api-base" content="" />
+  <title>cGMP Cell Analysis Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070a10;
+      --bg-elevated: rgba(18, 22, 34, 0.72);
+      --bg-card: rgba(22, 28, 42, 0.65);
+      --accent: #7c9cff;
+      --accent-hot: #a78bfa;
+      --accent2: #34e4c0;
+      --accent-warm: #fb923c;
+      --text: #f1f4fb;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,.1);
+      --ring: rgba(124, 156, 255, 0.35);
+      --glass: blur(20px);
+    }
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 120% 80% at 10% -10%, rgba(124, 156, 255, 0.18), transparent 50%),
+        radial-gradient(ellipse 90% 60% at 100% 0%, rgba(52, 228, 192, 0.12), transparent 45%),
+        radial-gradient(ellipse 70% 50% at 50% 100%, rgba(167, 139, 250, 0.08), transparent 55%),
+        linear-gradient(180deg, #0a0e18 0%, var(--bg) 45%, #0c101c 100%);
+      color: var(--text);
+      min-height: 100vh;
+      letter-spacing: 0.01em;
+    }
+    .navbar-app {
+      background: rgba(8, 11, 18, 0.75) !important;
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 32px rgba(0,0,0,.25);
+    }
+    .whoami-pill {
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .brand-gradient {
+      background: linear-gradient(105deg, #c4d4ff 0%, var(--accent) 35%, var(--accent2) 70%, #a7f3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .card-app {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow:
+        0 4px 24px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .card-app h6 { color: var(--text); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.72rem; }
+    .kpi-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(124,156,255,.12), transparent 55%);
+      pointer-events: none;
+    }
+    .kpi-num {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(120deg, #e0e7ff, var(--accent), var(--accent-hot));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      z-index: 1;
+    }
+    .nav-tabs-app {
+      background: rgba(0,0,0,.2);
+      padding: 0.35rem;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    .nav-tabs-app .nav-link {
+      color: var(--muted);
+      border: none;
+      border-radius: 12px;
+      padding: .5rem 1.1rem;
+      margin-right: .2rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    .nav-tabs-app .nav-link.active {
+      background: linear-gradient(135deg, rgba(124,156,255,.35), rgba(52,228,192,.12));
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 0 24px rgba(124, 156, 255, 0.15);
+    }
+    .nav-tabs-app .nav-link:not(.active):hover { color: var(--text); background: rgba(255,255,255,.06); }
+    .table-app {
+      --bs-table-bg: transparent;
+      --bs-table-color: var(--text);
+      --bs-table-border-color: var(--border);
+    }
+    .table-app thead { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+    .badge-status { font-size: .72rem; font-weight: 600; }
+    .hidden { display: none !important; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85rem; }
+    .result-img {
+      width: 100%; max-height: 280px; object-fit: contain;
+      background: #0d1218; border: 1px solid var(--border); border-radius: 10px;
+    }
+    .login-shell {
+      max-width: 420px;
+      margin: 2rem auto;
+    }
+    .login-shell .card-app {
+      padding: 2.25rem;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .form-control, .form-select {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .form-control:focus, .form-select:focus {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(124, 156, 255, 0.55);
+      color: var(--text);
+      box-shadow: 0 0 0 3px var(--ring);
+    }
+    .form-control::placeholder { color: var(--muted); }
+    .btn-accent {
+      background: linear-gradient(135deg, #6366f1, var(--accent) 50%, var(--accent2));
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 8px 28px rgba(99, 102, 241, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .btn-accent:hover {
+      filter: brightness(1.06);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 36px rgba(99, 102, 241, 0.45);
+    }
+    .timeline-item {
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-time { color: var(--accent2); font-size: .85rem; font-weight: 600; }
+    .overlay-lock {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(5, 7, 12, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .overlay-inner { max-width: 440px; width: 100%; }
+    .kpi-status-viz { min-height: 100px; }
+    #toastStack {
+      position: fixed; bottom: 1rem; right: 1rem; z-index: 4000;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      max-width: min(440px, 94vw); pointer-events: none;
+    }
+    .app-toast {
+      pointer-events: auto;
+      padding: 0.85rem 1.15rem;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .28s ease, transform .28s ease;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .app-toast.app-toast--show { opacity: 1; transform: translateY(0); }
+    .app-toast--success { border-color: rgba(34,211,166,.45); }
+    .app-toast--danger { border-color: rgba(248,113,113,.5); }
+    .app-toast--warning { border-color: rgba(251,191,36,.45); }
+    .app-toast--info { border-color: rgba(61,155,253,.4); }
+    .landing-hero {
+      border: 1px solid var(--border);
+      background: linear-gradient(155deg, rgba(30, 38, 58, 0.9) 0%, rgba(14, 18, 28, 0.5) 100%);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    .landing-hero h1 { letter-spacing: -0.04em; }
+    .landing-icon { font-size: 2rem; opacity: 0.95; filter: drop-shadow(0 4px 12px rgba(0,0,0,.3)); }
+    .landing-card { cursor: default; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; border-radius: 20px !important; }
+    .landing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 40px rgba(124, 156, 255, 0.08);
+      border-color: rgba(124, 156, 255, 0.25) !important;
+    }
+    .landing-card.border-accent { border-color: rgba(124, 156, 255, 0.35) !important; }
+    .kpi-status-card { min-height: 140px; }
+    .kpi-status-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .pipeline-bar {
+      display: flex;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,.35);
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .pipeline-seg { display: block; height: 100%; min-width: 4px; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+    .pipeline-seg--created { background: linear-gradient(90deg, #64748b, #94a3b8); }
+    .pipeline-seg--uploaded { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .pipeline-seg--analyzed { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .pipeline-seg--submitted { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .pipeline-seg--passed { background: linear-gradient(90deg, #10b981, #34d399); }
+    .pipeline-seg--reanalysis_required { background: linear-gradient(90deg, #f97316, #fb923c); }
+    .pipeline-seg--rejected { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .pipeline-seg--empty { background: rgba(255,255,255,.06); min-width: 100%; }
+    .admin-master-card {
+      border-color: rgba(124, 156, 255, 0.28);
+      box-shadow: 0 8px 40px rgba(0,0,0,.4), 0 0 0 1px rgba(124, 156, 255, 0.12);
+    }
+    .admin-stat-tile {
+      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid var(--border);
+      height: 100%;
+    }
+    .admin-stat-tile .admin-stat-lbl {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .admin-stat-tile .admin-stat-val {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(120deg, #e0e7ff, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .admin-role-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+    .admin-role-chip {
+      font-size: 0.78rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .admin-role-chip span { color: var(--accent2); font-weight: 700; margin-left: 0.25rem; }
+    .landing-admin-hero {
+      border: 1px solid rgba(167, 139, 250, 0.28);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(15, 18, 28, 0.5));
+      border-radius: 20px !important;
+    }
+    .border-admin-tile {
+      border-color: rgba(124, 156, 255, 0.22) !important;
+    }
+    .admin-section-icon {
+      font-size: 1.75rem;
+      line-height: 1;
+      filter: grayscale(0.2);
+    }
+    .admin-mini-stat {
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      height: 100%;
+    }
+    .admin-mini-stat-lbl {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .admin-mini-stat-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .admin-mini-stat-sub { color: var(--muted); margin-top: 0.15rem; }
+    .admin-mini-stat--ok .admin-mini-stat-val { color: var(--accent2); }
+    .admin-mini-stat--pending .admin-mini-stat-val { color: var(--accent-warm); }
+    .admin-mini-stat--no .admin-mini-stat-val { color: #f87171; }
+    .admin-landing-table-wrap {
+      max-height: min(52vh, 520px);
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .pipeline-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pipeline-dot--created { background: linear-gradient(135deg, #64748b, #94a3b8) !important; box-shadow: 0 0 10px rgba(148,163,184,.45); }
+    .pipeline-dot--uploaded { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; box-shadow: 0 0 10px rgba(59,130,246,.4); }
+    .pipeline-dot--analyzed { background: linear-gradient(135deg, #8b5cf6, #a78bfa) !important; box-shadow: 0 0 10px rgba(139,92,246,.4); }
+    .pipeline-dot--submitted { background: linear-gradient(135deg, #f59e0b, #fbbf24) !important; box-shadow: 0 0 10px rgba(245,158,11,.4); }
+    .pipeline-dot--passed { background: linear-gradient(135deg, #10b981, #34d399) !important; box-shadow: 0 0 10px rgba(16,185,129,.4); }
+    .pipeline-dot--reanalysis_required { background: linear-gradient(135deg, #f97316, #fb923c) !important; box-shadow: 0 0 10px rgba(249,115,22,.4); }
+    .pipeline-dot--rejected { background: linear-gradient(135deg, #ef4444, #f87171) !important; box-shadow: 0 0 10px rgba(239,68,68,.4); }
+    .pipeline-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.5rem 0.75rem;
+    }
+    .pipeline-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .pipeline-count { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; margin-left: auto; }
+    .wizard-shell { max-width: 720px; width: 100%; max-height: 92vh; overflow-y: auto; }
+    .wizard-steps { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .wizard-steps span { font-size: 0.75rem; padding: 0.35rem 0.65rem; border-radius: 999px; background: rgba(255,255,255,.06); color: var(--muted); }
+    .wizard-steps span.active { background: rgba(124,156,255,.22); color: var(--text); border: 1px solid rgba(124,156,255,.25); }
+    .spinner-ring {
+      width: 3.5rem; height: 3.5rem; border: 3px solid rgba(255,255,255,.12);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .results-shell, .review-shell { max-width: min(1420px, 98vw); width: 100%; max-height: 92vh; overflow-y: auto; }
+    .result-img-lg {
+      width: 100%;
+      max-height: min(86vh, 1024px);
+      min-height: 220px;
+      object-fit: contain;
+      background: #0d1218;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .img-zoomable {
+      cursor: zoom-in;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .img-zoomable:hover {
+      box-shadow: 0 0 0 2px rgba(124, 156, 255, 0.45);
+      transform: scale(1.002);
+    }
+    .image-lightbox-inner { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .result-live-reveal {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+      filter: blur(5px);
+      animation: resultLiveReveal 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation-delay: var(--reveal-delay, 0ms);
+    }
+    @keyframes resultLiveReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+    .js-live-count { font-weight: 600; color: var(--accent2); }
+    .read-only-badge { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    .review-dash-stat-num {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--accent2);
+    }
+    .review-activity-log {
+      max-height: min(240px, 32vh);
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.2);
+      padding: 0.65rem 0.85rem;
+    }
+    .review-activity-row {
+      font-size: 0.8rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .review-activity-row:last-child { border-bottom: 0; }
+    .review-activity-meta { color: var(--muted); font-size: 0.72rem; }
+    /* Operators (role user): legacy batch table / create / analyze UI removed — use landing + wizard only */
+    #workspaceView.workspace-user-role #mainTabs .nav-item:has([data-bs-target="#tabBatches"]),
+    #workspaceView.workspace-user-role #tabBatches {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-app">
+    <div class="container-fluid px-3">
+      <span class="navbar-brand brand-gradient">cGMP Cell Analysis</span>
+      <div class="d-flex align-items-center gap-2 text-white">
+        <button id="navHome" type="button" class="btn btn-sm btn-outline-light hidden">Home</button>
+        <span id="whoami" class="whoami-pill small"></span>
+        <button id="btnChangePw" type="button" class="btn btn-sm btn-outline-light hidden">Change password</button>
+        <button id="logoutBtn" type="button" class="btn btn-sm btn-outline-light hidden">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4 pb-5">
+    <section id="loginSection">
+      <div class="login-shell">
+        <div class="card-app">
+          <h4 class="mb-1 brand-gradient">Secure sign in</h4>
+          <p class="text-secondary small mb-4">21 CFR Part 11 oriented workflow · segmentation QC</p>
+          <form id="loginForm">
+            <label class="small text-secondary">Username</label>
+            <input class="form-control mb-3" name="username" placeholder="Username" required autocomplete="username" />
+            <label class="small text-secondary">Password</label>
+            <input class="form-control mb-4" name="password" type="password" placeholder="Password" required autocomplete="current-password" />
+            <button type="submit" class="btn btn-accent w-100 py-2">Sign in</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div id="mustChangeOverlay" class="overlay-lock hidden">
+      <div class="overlay-inner card-app p-4">
+        <h5 class="mb-2">Change your password</h5>
+        <p class="small text-secondary mb-3">Your account requires a new password before continuing (temporary or initial credentials).</p>
+        <form id="forcedPwForm">
+          <label class="small text-secondary">Current password</label>
+          <input class="form-control mb-2" name="old_password" type="password" required autocomplete="current-password" />
+          <label class="small text-secondary">New password (min 8 characters)</label>
+          <input class="form-control mb-2" name="new_password" type="password" required minlength="8" autocomplete="new-password" />
+          <label class="small text-secondary">Confirm new password</label>
+          <input class="form-control mb-3" name="new_password2" type="password" required minlength="8" autocomplete="new-password" />
+          <button type="submit" class="btn btn-accent w-100">Save new password</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="modalAdminEditBatch" class="overlay-lock hidden" style="z-index: 1600;">
+      <div class="overlay-inner card-app p-4" style="max-width: 520px;">
+        <h5 class="mb-2">Edit batch metadata</h5>
+        <p class="small text-secondary mb-3">Batch code is fixed (storage paths). Update display name and sample fields.</p>
+        <form id="adminEditBatchForm">
+          <input type="hidden" name="batch_id" id="adminEditBatchId" />
+          <label class="small text-secondary">Batch code</label>
+          <input class="form-control mb-2 mono" id="adminEditBatchCode" readonly tabindex="-1" />
+          <label class="small text-secondary">Batch name</label>
+          <input class="form-control mb-2" name="batch_name" id="adminEditBatchName" required />
+          <label class="small text-secondary">Sample ID</label>
+          <input class="form-control mb-2" name="sample_id" id="adminEditSampleId" />
+          <label class="small text-secondary">Description</label>
+          <input class="form-control mb-2" name="description" id="adminEditDescription" />
+          <label class="small text-secondary">Sample details</label>
+          <input class="form-control mb-3" name="sample_description" id="adminEditSampleDesc" />
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="adminEditBatchCancel">Cancel</button>
+            <button type="submit" class="btn btn-accent flex-grow-1">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="modalPickReviewer" class="overlay-lock hidden" style="z-index: 1600;">
+      <div class="overlay-inner card-app p-4" style="max-width: 440px;">
+        <h5 class="mb-2">Send to reviewer</h5>
+        <p class="small text-secondary mb-3">Select the reviewer who will receive this analyzed batch for electronic review and signature.</p>
+        <label class="small text-secondary">Reviewer</label>
+        <select class="form-select mb-3" id="submitReviewerSelect"></select>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary flex-grow-1" id="modalPickReviewerCancel">Cancel</button>
+          <button type="button" class="btn btn-accent flex-grow-1" id="modalPickReviewerOk">Submit for review</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalChangePw" class="overlay-lock hidden" style="z-index: 1500;">
+      <div class="overlay-inner card-app p-4">
+        <h5 class="mb-3">Change password</h5>
+        <form id="voluntaryPwForm">
+          <label class="small text-secondary">Current password</label>
+          <input class="form-control mb-2" name="old_password" type="password" required />
+          <label class="small text-secondary">New password</label>
+          <input class="form-control mb-2" name="new_password" type="password" required minlength="8" />
+          <label class="small text-secondary">Confirm</label>
+          <input class="form-control mb-3" name="new_password2" type="password" required minlength="8" />
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary flex-grow-1" id="modalPwCancel">Cancel</button>
+            <button type="submit" class="btn btn-accent flex-grow-1">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <section id="appSection" class="hidden">
+      <div id="landingView">
+        <div id="landingStandard">
+        <div class="landing-hero card-app p-4 p-md-5 mb-4 text-center">
+          <h1 class="brand-gradient display-6 fw-bold mb-3">Cell analysis workspace</h1>
+          <p class="text-secondary mx-auto mb-4" style="max-width: 680px;">
+            Run a guided workflow: register batch and sample metadata, upload one or many microscopy images, wait while the model segments positive cells,
+            inspect large segmentation overlays on your images, then send the package to a reviewer. Track <strong>completed</strong>, <strong>rejected</strong>, and <strong>re-analysis</strong> batches in read-only folders.
+          </p>
+          <button type="button" id="btnStartWorkflow" class="btn btn-accent btn-lg px-5 py-3 rounded-3">Start analysis workflow</button>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="card-app p-4 h-100 landing-card" data-go="archive">
+              <div class="landing-icon mb-2" aria-hidden="true">&#128202;</div>
+              <h5 class="mb-2">Analyzed data</h5>
+              <p class="small text-secondary mb-3">Timeline of analysis runs with thumbnails and cell totals.</p>
+              <button type="button" class="btn btn-outline-light btn-sm w-100 landing-go">Open</button>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card-app p-4 h-100 landing-card" data-go="folders">
+              <div class="landing-icon mb-2" aria-hidden="true">&#128193;</div>
+              <h5 class="mb-2">Result folders</h5>
+              <p class="small text-secondary mb-3">Accepted (read-only), rejected (read-only), and batches waiting for a new analysis pass.</p>
+              <button type="button" class="btn btn-outline-light btn-sm w-100 landing-go">Open</button>
+            </div>
+          </div>
+          <div class="col-md-4" id="landingCardReview">
+            <div class="card-app p-4 h-100 landing-card border-accent" data-go="review">
+              <div class="landing-icon mb-2" aria-hidden="true">&#9989;</div>
+              <h5 class="mb-2">Review board</h5>
+              <p class="small text-secondary mb-1" id="landingReviewBlurb">Queue and decisions for qualified reviewers.</p>
+              <div class="small fw-semibold mb-3" id="landingReviewCount" style="color: var(--accent2);">—</div>
+              <button type="button" class="btn btn-outline-info btn-sm w-100 landing-go">Open</button>
+            </div>
+          </div>
+        </div>
+        <p id="landingToolsHint" class="text-center small text-secondary mb-0">
+          <button type="button" id="btnOpenTools" class="btn btn-link text-secondary text-decoration-none">Advanced tools &middot; batch table &middot; admin</button>
+        </p>
+        </div>
+
+        <div id="landingReviewer" class="hidden">
+          <div class="landing-hero card-app p-4 p-md-5 mb-4 text-center">
+            <h1 class="brand-gradient display-6 fw-bold mb-3">Reviewer dashboard</h1>
+            <p class="text-secondary mx-auto mb-0" style="max-width: 640px;">
+              Review analyzed batches assigned to you (or open assignments). Batch creation and “send for review” are not available in this role.
+            </p>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+              <div class="card-app p-4 text-center h-100">
+                <div class="small text-secondary fw-semibold mb-1">Awaiting review</div>
+                <div class="kpi-num text-warning" id="landingRevPending">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card-app p-4 text-center h-100">
+                <div class="small text-secondary fw-semibold mb-1">Accepted</div>
+                <div class="kpi-num text-success" id="landingRevAccepted">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card-app p-4 text-center h-100">
+                <div class="small text-secondary fw-semibold mb-1">Rejected</div>
+                <div class="kpi-num text-danger" id="landingRevRejected">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="card-app p-4 text-center h-100">
+                <div class="small text-secondary fw-semibold mb-1">Re-analysis sent</div>
+                <div class="kpi-num" style="color: var(--accent-warm);" id="landingRevReanalysis">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center">
+            <button type="button" class="btn btn-accent btn-lg px-5 rounded-3" id="btnReviewerOpenQueue">Open review queue</button>
+          </div>
+        </div>
+
+        <div id="landingAdmin" class="hidden">
+          <div class="landing-admin-hero card-app p-4 p-md-5 mb-4">
+            <div class="row align-items-center g-4">
+              <div class="col-lg-8">
+                <p class="small fw-semibold mb-2" style="letter-spacing:0.14em;color:var(--accent-hot);text-transform:uppercase;">Administrator</p>
+                <h1 class="brand-gradient display-6 fw-bold mb-3">System control center</h1>
+                <p class="text-secondary mb-0" style="max-width:640px;">
+                  Manage accounts and privileges, inspect analysis images by outcome (accepted, pending, rejected), and edit metadata or delete batches.
+                  Operators and reviewers use a different home screen.
+                </p>
+              </div>
+              <div class="col-lg-4 text-lg-end">
+                <button type="button" id="btnAdminOpenWorkspace" class="btn btn-outline-light btn-lg rounded-3 px-4">Full workspace &amp; tools</button>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4 mb-3">
+            <div class="col-12 col-xl-6">
+              <div class="card-app p-4 h-100 border-admin-tile">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                  <span class="admin-section-icon" aria-hidden="true">&#128101;</span>
+                  <div>
+                    <h5 class="mb-1 fw-bold">User management</h5>
+                    <p class="small text-secondary mb-0">Create accounts, set role (operator, reviewer, admin), reset passwords, and remove users.</p>
+                  </div>
+                </div>
+                <div class="card-app p-3 mb-3" style="background:rgba(0,0,0,.22);">
+                  <h6 class="small text-uppercase text-secondary mb-3">Create user</h6>
+                  <form id="userForm" class="row g-3 align-items-end">
+                    <div class="col-md-6 col-xl-12 col-xxl-6">
+                      <label class="small text-secondary">Username</label>
+                      <input class="form-control" name="username" required autocomplete="off" />
+                    </div>
+                    <div class="col-md-6 col-xl-12 col-xxl-6">
+                      <label class="small text-secondary">Role</label>
+                      <select class="form-select" name="role">
+                        <option value="user">Operator</option>
+                        <option value="reviewer">Reviewer</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <label class="small text-secondary">Initial password (if not using temporary)</label>
+                      <input class="form-control" name="password" type="password" placeholder="Min 8 chars" autocomplete="new-password" />
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="genTemp" />
+                        <label class="form-check-label small" for="genTemp">Generate temporary password</label>
+                      </div>
+                      <button type="submit" class="btn btn-accent">Create user</button>
+                    </div>
+                  </form>
+                </div>
+                <h6 class="small text-uppercase text-secondary mb-2">Directory</h6>
+                <div id="adminLandingUsersWrap" class="table-responsive admin-landing-table-wrap"></div>
+              </div>
+            </div>
+            <div class="col-12 col-xl-6">
+              <div class="card-app p-4 h-100 border-admin-tile">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                  <span class="admin-section-icon" aria-hidden="true">&#128200;</span>
+                  <div>
+                    <h5 class="mb-1 fw-bold">Data management</h5>
+                    <p class="small text-secondary mb-0">Cell-image counts by batch outcome; review batches, edit labels, or delete records.</p>
+                  </div>
+                </div>
+                <div class="row g-2 mb-3">
+                  <div class="col-4">
+                    <div class="admin-mini-stat admin-mini-stat--ok">
+                      <div class="admin-mini-stat-lbl">Accepted</div>
+                      <div class="admin-mini-stat-val" id="adminLandStatAccepted">0</div>
+                      <div class="admin-mini-stat-sub">images</div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="admin-mini-stat admin-mini-stat--pending">
+                      <div class="admin-mini-stat-lbl">Pending</div>
+                      <div class="admin-mini-stat-val" id="adminLandStatPending">0</div>
+                      <div class="admin-mini-stat-sub">images</div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="admin-mini-stat admin-mini-stat--no">
+                      <div class="admin-mini-stat-lbl">Rejected</div>
+                      <div class="admin-mini-stat-val" id="adminLandStatRejected">0</div>
+                      <div class="admin-mini-stat-sub">images</div>
+                    </div>
+                  </div>
+                </div>
+                <p class="small text-secondary mb-2">Accepted = reviewer-passed batches. Rejected = reviewer-rejected. Pending = still in workflow (upload through re-analysis).</p>
+                <div id="adminLandingDataWrap" class="table-responsive admin-landing-table-wrap"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="workspaceView" class="hidden">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <button type="button" id="btnBackLanding" class="btn btn-sm btn-outline-light">← Back to home</button>
+      </div>
+      <div id="kpiRowStandard" class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Total batches</div><div class="kpi-num" id="kpiBatches">0</div></div></div>
+        <div class="col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Total images</div><div class="kpi-num" id="kpiImages">0</div></div></div>
+        <div class="col-md-6"><div class="card-app p-4 kpi-card kpi-status-card">
+          <div class="kpi-status-title">Batch pipeline</div>
+          <div id="kpiStatusViz" class="kpi-status-viz" aria-label="Batch counts by workflow status"></div>
+        </div></div>
+      </div>
+
+      <div id="kpiRowReviewer" class="row g-3 mb-4 hidden">
+        <div class="col-6 col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Awaiting review</div><div class="kpi-num text-warning" id="wsRevPending">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Accepted (you)</div><div class="kpi-num text-success" id="wsRevAccepted">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Rejected (you)</div><div class="kpi-num text-danger" id="wsRevRejected">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="card-app p-4 kpi-card"><div class="small text-secondary fw-semibold">Re-analysis (you)</div><div class="kpi-num" style="color: var(--accent-warm);" id="wsRevReanalysis">0</div></div></div>
+      </div>
+
+      <div id="adminMasterRoot" class="hidden mb-4">
+        <div class="card-app p-4 admin-master-card">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+              <h5 class="mb-1 fw-bold" style="letter-spacing: -0.02em;">Master console</h5>
+              <p class="small text-secondary mb-0">System-wide activity: batches, images by outcome, accounts, and recent batches you can open or remove.</p>
+            </div>
+            <span class="badge rounded-pill" style="background: rgba(124,156,255,.22); color: var(--accent); font-weight: 600;">Administrator</span>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="admin-stat-tile">
+                <div class="admin-stat-lbl">Total batches</div>
+                <div class="admin-stat-val" id="adminKpiBatches">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="admin-stat-tile">
+                <div class="admin-stat-lbl">Total images</div>
+                <div class="admin-stat-val" id="adminKpiImages">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="admin-stat-tile">
+                <div class="admin-stat-lbl">Registered users</div>
+                <div class="admin-stat-val" id="adminKpiUsers">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="admin-stat-tile">
+                <div class="admin-stat-lbl">Accounts by role</div>
+                <div id="adminUsersByRole" class="admin-role-chips mt-2"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+              <div class="card-app p-3" style="background: rgba(0,0,0,.18);">
+                <div class="kpi-status-title">Batches by workflow status</div>
+                <div id="adminBatchPipelineViz" class="kpi-status-viz" aria-label="All batches by status"></div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card-app p-3" style="background: rgba(0,0,0,.18);">
+                <div class="kpi-status-title">Images by batch status</div>
+                <p class="small text-secondary mb-2 mb-lg-2">Cell images grouped by the current status of their parent batch (accepted, rejected, re-analysis, etc.).</p>
+                <div id="adminImagePipelineViz" class="kpi-status-viz" aria-label="Images by batch status"></div>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-status-title mb-2">Recent batches</div>
+          <p class="small text-secondary mb-2">Latest updates across the system. Delete removes the batch, its images, notifications, archives, and audit entries for that batch.</p>
+          <div id="adminRecentBatchesWrap" class="table-responsive"></div>
+        </div>
+      </div>
+
+      <ul class="nav nav-tabs nav-tabs-app mb-3 flex-wrap" id="mainTabs">
+        <li class="nav-item"><button type="button" class="nav-link active" data-bs-target="#tabBatches">Batches</button></li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-target="#tabArchive">Analysis archive</button></li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-target="#tabFolders">Result folders</button></li>
+        <li class="nav-item hidden" id="navItemUserSubmissions">
+          <button type="button" class="nav-link" data-bs-target="#tabUserSubmissions">Submitted for review</button>
+        </li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-target="#tabReview">Review</button></li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-target="#tabAdmin">Admin</button></li>
+        <li class="nav-item"><button type="button" class="nav-link" data-bs-target="#tabNotify">Notifications</button></li>
+      </ul>
+
+      <div id="tabBatches">
+        <div class="card-app p-4 mb-3">
+          <h6>Create batch</h6>
+          <form id="batchForm" class="row g-2 align-items-end">
+            <div class="col-md-2"><input class="form-control" name="batch_code" placeholder="Batch code" required /></div>
+            <div class="col-md-2"><input class="form-control" name="batch_name" placeholder="Batch name" required /></div>
+            <div class="col-md-2"><input class="form-control" name="sample_id" placeholder="Sample ID" /></div>
+            <div class="col-md-2"><input class="form-control" name="description" placeholder="Description" /></div>
+            <div class="col-md-2"><input class="form-control" name="sample_description" placeholder="Sample details" /></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-accent w-100">Create</button></div>
+          </form>
+        </div>
+
+        <div class="card-app p-4 mb-3">
+          <h6 class="mb-3">Batches</h6>
+          <div id="batchTableWrap" class="table-responsive"></div>
+        </div>
+
+        <div class="card-app p-4">
+          <h6 class="mb-3">Segmentation output</h6>
+          <p class="small text-secondary mb-3">Appears here after Analyze — high-contrast overlay and cell count per image.</p>
+          <div id="resultWrap" class="row g-3"></div>
+        </div>
+      </div>
+
+      <div id="tabArchive" class="hidden">
+        <div class="card-app p-4">
+          <h6 class="mb-2">Analysis archive</h6>
+          <p class="small text-secondary mb-4">All completed analysis runs, newest first (stored with UTC timestamp).</p>
+          <div id="archiveWrap"></div>
+        </div>
+      </div>
+
+      <div id="tabFolders" class="hidden">
+        <div class="row g-3">
+          <div class="col-lg-4">
+            <div class="card-app p-4 h-100">
+              <h6 class="text-success mb-2">Completed (accepted)</h6>
+              <p class="read-only-badge mb-2">Read-only</p>
+              <p class="small text-secondary mb-3">Reviewer accepted; formal report on file.</p>
+              <div id="folderCompleted" class="small"></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card-app p-4 h-100">
+              <h6 class="text-danger mb-2">Rejected</h6>
+              <p class="read-only-badge mb-2">Read-only</p>
+              <p class="small text-secondary mb-3">Reviewer rejected; no further edits.</p>
+              <div id="folderRejected" class="small"></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card-app p-4 h-100">
+              <h6 class="text-warning mb-2">To be re-analyzed</h6>
+              <p class="small text-secondary mb-3">Run the workflow again: upload if needed, analyze, then submit.</p>
+              <div id="folderReanalysis" class="small"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tabUserSubmissions" class="hidden">
+        <div class="card-app p-4">
+          <h6 class="mb-2">Submitted for review</h6>
+          <p class="small text-secondary mb-4">
+            These batches are with a reviewer. Open any row to see the <strong>same results table and overlay images</strong> you had before submitting (read-only).
+          </p>
+          <div id="userSubmittedWrap"></div>
+        </div>
+      </div>
+
+      <div id="tabReview" class="hidden">
+        <div class="review-dash-statbar card-app p-4 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div>
+            <div class="small text-secondary text-uppercase fw-semibold mb-1" style="letter-spacing: 0.08em">Received review requests</div>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+              <span class="review-dash-stat-num" id="reviewStatPending">0</span>
+              <span class="text-secondary small">batch(es) awaiting decision</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-info btn-sm" id="btnReviewDashRefresh">Refresh queue</button>
+        </div>
+        <div class="card-app p-4">
+          <h6 class="fw-bold mb-1">Review queue</h6>
+          <p class="small text-secondary mb-3">
+            Inspect segmentation overlays, read the batch activity log, then <strong>accept</strong>, <strong>send back for re-analysis</strong>, or <strong>reject</strong> with a comment and electronic signature.
+          </p>
+          <div id="reviewWrap" class="table-responsive"></div>
+        </div>
+      </div>
+
+      <div id="tabAdmin" class="hidden">
+        <div class="card-app p-4 mb-3">
+          <h6 class="mb-2">Users</h6>
+          <p class="small text-secondary mb-3">Create users and assign roles on <strong>Home</strong>. This list mirrors that directory; report checksum verification lives under the Notifications tab.</p>
+          <div id="usersWrap"></div>
+        </div>
+      </div>
+
+      <div id="tabNotify" class="hidden">
+        <div class="card-app p-4 mb-3">
+          <h6>Notifications</h6>
+          <div id="notifyWrap" class="mt-3"></div>
+        </div>
+        <div class="card-app p-4">
+          <h6>Report checksum verification</h6>
+          <form id="verifyForm" class="row g-2 mt-2">
+            <div class="col-md-9"><input class="form-control mono" name="report_path" placeholder="Full path to report JSON" required /></div>
+            <div class="col-md-3"><button type="submit" class="btn btn-outline-light w-100">Verify</button></div>
+          </form>
+          <pre class="mono mt-3 mb-0 text-secondary" id="verifyResult"></pre>
+        </div>
+      </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="wizardOverlay" class="overlay-lock hidden" style="z-index: 2100;">
+    <div class="wizard-shell card-app">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="wizard-steps" id="wizardStepLabels">
+          <span class="active" data-step="0">Intro</span>
+          <span data-step="1">Batch &amp; sample</span>
+          <span data-step="2">Upload images</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="wizardClose">Close</button>
+      </div>
+      <div id="wizPage0">
+        <h5 class="mb-3">Before you begin</h5>
+        <ul class="text-secondary small mb-4">
+          <li>Use consistent batch codes per your SOP.</li>
+          <li>Upload JPG/PNG/TIFF microscopy images (single or multiple).</li>
+          <li>Results show a large color overlay on your image (no separate mask view).</li>
+          <li>Analysis may take several minutes on first GPU load.</li>
+          <li>After review, accepted batches appear under <strong>Completed</strong>; rejected under <strong>Rejected</strong>; re-analysis requests return here for a new pass.</li>
+        </ul>
+        <button type="button" class="btn btn-accent" id="wizNext0">Next</button>
+      </div>
+      <div id="wizPage1" class="hidden">
+        <h5 class="mb-3">Batch &amp; sample details</h5>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="small text-secondary">Batch code *</label><input class="form-control" id="wizBatchCode" required placeholder="e.g. BATCH-2025-001" /></div>
+          <div class="col-md-6"><label class="small text-secondary">Batch name *</label><input class="form-control" id="wizBatchName" required /></div>
+          <div class="col-12"><label class="small text-secondary">Description</label><input class="form-control" id="wizBatchDesc" placeholder="Optional batch notes" /></div>
+          <div class="col-md-6"><label class="small text-secondary">Sample ID</label><input class="form-control" id="wizSampleId" placeholder="Sample or slide ID" /></div>
+          <div class="col-12"><label class="small text-secondary">Sample details</label><textarea class="form-control" id="wizSampleDesc" rows="3" placeholder="Material, preparation, lot, etc."></textarea></div>
+        </div>
+        <div class="d-flex gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" id="wizBack1">Back</button>
+          <button type="button" class="btn btn-accent" id="wizNext1">Next</button>
+        </div>
+      </div>
+      <div id="wizPage2" class="hidden">
+        <h5 class="mb-3">Upload images</h5>
+        <p class="small text-secondary mb-3">Choose one file or multiple files, then run analysis.</p>
+        <input type="file" id="wizFileInput" class="form-control mb-3" accept="image/*" multiple />
+        <div class="d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-outline-secondary" id="wizBack2">Back</button>
+          <button type="button" class="btn btn-accent" id="wizRunAnalyze">Upload &amp; run analysis</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="analyzingOverlay" class="overlay-lock hidden" style="z-index: 2200;">
+    <div class="card-app p-5 text-center" style="min-width: 280px;">
+      <div class="spinner-ring mx-auto mb-4"></div>
+      <h5 class="mb-2">Analysis in progress</h5>
+      <p class="small text-secondary mb-0">Segmentation and cell counting are running. Please keep this window open.</p>
+    </div>
+  </div>
+
+  <div id="resultsOverlay" class="overlay-lock hidden" style="z-index: 2250;">
+    <div class="results-shell card-app p-4">
+      <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+          <h5 class="mb-1">Analysis results</h5>
+          <p class="small text-secondary mb-0" id="resultsBatchMeta"></p>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="resultsClose">Close</button>
+      </div>
+      <div class="table-responsive mb-4">
+        <table class="table table-app table-sm" id="resultsTable"></table>
+      </div>
+      <h6 class="small text-secondary mb-2">Segmentation overlay (large preview)</h6>
+      <div id="resultsImages" class="row g-3 mb-4"></div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-accent" id="btnSendFromResults">Send to reviewer</button>
+        <button type="button" class="btn btn-outline-light" id="resultsClose2">Back to home</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewOverlay" class="overlay-lock hidden" style="z-index: 2300;">
+    <div class="review-shell card-app p-4">
+      <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+          <h5 class="mb-1 fw-bold">Review batch</h5>
+          <p class="small text-secondary mb-0" id="reviewBatchMeta"></p>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="reviewOverlayClose">Close</button>
+      </div>
+      <h6 class="small text-secondary mb-2">Batch activity log</h6>
+      <p class="small text-secondary mb-2">Prior submissions, analysis runs, and review outcomes for this batch (oldest → newest).</p>
+      <div id="reviewActivityLog" class="review-activity-log mb-4"></div>
+      <div class="table-responsive mb-3">
+        <table class="table table-app table-sm" id="reviewTable"></table>
+      </div>
+      <h6 class="small text-secondary mb-2">Segmentation overlays</h6>
+      <div id="reviewImages" class="row g-3 mb-3"></div>
+      <label class="small text-secondary">Decision comment <span class="text-danger">*</span></label>
+      <textarea class="form-control mb-3" id="reviewRemark" rows="3" placeholder="Required (min. 10 characters) before accept, re-analysis, or reject"></textarea>
+      <hr class="border-secondary opacity-25" />
+      <p class="small text-secondary mb-2">Electronic signature (21 CFR Part 11 style)</p>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6"><input class="form-control" id="revSigUser" placeholder="Username (must match you)" autocomplete="username" /></div>
+        <div class="col-md-6"><input class="form-control" id="revSigPass" type="password" placeholder="Password" autocomplete="current-password" /></div>
+        <div class="col-md-6"><input class="form-control" id="revSigMeaning" placeholder="Meaning of signature (min 5 chars)" /></div>
+        <div class="col-md-6"><input class="form-control" id="revSigReason" placeholder="Reason (min 5 chars)" /></div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-success" id="btnReviewAccept">Accept batch</button>
+        <button type="button" class="btn btn-warning text-dark" id="btnReviewReanalyze">Send back for re-analysis</button>
+        <button type="button" class="btn btn-danger" id="btnReviewReject">Reject batch</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="imageLightbox" class="overlay-lock hidden" style="z-index: 2700;">
+    <div class="image-lightbox-inner card-app p-3 position-relative" style="max-width: min(1600px, 99vw); max-height: 96vh; overflow: auto;">
+      <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" id="imageLightboxClose" style="z-index: 2;">Close</button>
+      <img id="imageLightboxImg" src="" alt="Full-size overlay preview" style="max-width: 100%; height: auto; max-height: min(88vh, 1200px); object-fit: contain; background: #0d1218; border-radius: 12px; border: 1px solid var(--border);" />
+      <div id="imageLightboxCap" class="text-center small text-secondary mt-2 px-2"></div>
+      <p class="text-center small text-muted mb-0 mt-1">Click outside the image or press Esc to close</p>
+    </div>
+  </div>
+
+  <div id="pdfViewerOverlay" class="overlay-lock hidden" style="z-index: 2750;">
+    <div class="card-app p-3 d-flex flex-column" style="width: min(1200px, 98vw); height: min(900px, 92vh); max-height: 92vh;">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0 gap-2">
+        <span class="small text-secondary">Analysis report (PDF)</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="pdfViewerClose">Close</button>
+      </div>
+      <iframe id="pdfViewerFrame" class="flex-grow-1 w-100 border-0 rounded" style="min-height: 360px; background: #0d1218;" title="PDF report"></iframe>
+    </div>
+  </div>
+
+  <div id="toastStack" aria-live="polite" aria-relevant="additions"></div>
+
+  <script>
+    const API = (() => {
+      try {
+        const m = document.querySelector('meta[name="cgmp-api-base"]');
+        const mb = m && m.getAttribute("content");
+        if (mb && String(mb).trim()) return String(mb).trim().replace(/\/+$/, "") + "/api";
+      } catch (e) {}
+      try {
+        const o = new URLSearchParams(window.location.search).get("api_base");
+        if (o) return o.replace(/\/+$/, "") + "/api";
+      } catch (e) {}
+      if (window.location.protocol === "file:") {
+        const q = new URLSearchParams(window.location.search).get("api_base");
+        if (q) return q.replace(/\/+$/, "") + "/api";
+        return "http://127.0.0.1:8000/api";
+      }
+      return `${window.location.origin}/api`;
+    })();
+    let token = "";
+    let role = "";
+    let currentUsername = "";
+
+    const SS_TOKEN = "cgmp_access_token";
+    const SS_ROLE = "cgmp_role";
+    const SS_USER = "cgmp_username";
+
+    function saveSession() {
+      if (token) {
+        try {
+          sessionStorage.setItem(SS_TOKEN, token);
+          sessionStorage.setItem(SS_ROLE, role || "");
+          sessionStorage.setItem(SS_USER, currentUsername || "");
+        } catch (e) {}
+      }
+    }
+
+    function clearStoredSession() {
+      try {
+        sessionStorage.removeItem(SS_TOKEN);
+        sessionStorage.removeItem(SS_ROLE);
+        sessionStorage.removeItem(SS_USER);
+      } catch (e) {}
+    }
+
+    async function tryRestoreSession() {
+      let t;
+      try {
+        t = sessionStorage.getItem(SS_TOKEN);
+      } catch (e) {
+        return;
+      }
+      if (!t) return;
+      token = t;
+      role = sessionStorage.getItem(SS_ROLE) || "";
+      currentUsername = sessionStorage.getItem(SS_USER) || "";
+      try {
+        await api("/notifications");
+        document.getElementById("whoami").textContent = `${currentUsername} · ${role}`;
+        enterAppShell();
+        applyRoleUi();
+        await refreshDashboard();
+        await refreshBatches();
+        await refreshArchive();
+        await refreshReviewQueue();
+        if (role === "admin") await refreshUsers();
+        await refreshNotifications();
+        await refreshLandingCards();
+        if (role === "user") await refreshUserSubmittedList();
+      } catch (e) {
+        token = "";
+        role = "";
+        currentUsername = "";
+        clearStoredSession();
+      }
+    }
+
+    function authHeaders() {
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    function parseDetail(data) {
+      const d = data.detail;
+      if (Array.isArray(d)) return d.map((x) => x.msg || JSON.stringify(x)).join("; ");
+      if (typeof d === "object" && d !== null) return JSON.stringify(d);
+      return d || "Request failed";
+    }
+
+    async function api(url, opts = {}) {
+      const res = await fetch(API + url, {
+        ...opts,
+        headers: { ...(opts.headers || {}), ...authHeaders() },
+      });
+      const rawText = await res.text();
+      let data = {};
+      if (rawText) {
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { detail: rawText.slice(0, 280) || `HTTP ${res.status}` };
+        }
+      }
+      if (!res.ok) {
+        const err = new Error(parseDetail(data));
+        err.status = res.status;
+        throw err;
+      }
+      return data;
+    }
+
+    async function switchTab(id) {
+      if (role === "user" && id === "#tabBatches") id = "#tabArchive";
+      const host = document.getElementById("workspaceView");
+      if (!host) return;
+      host.querySelectorAll(":scope > div[id^='tab']").forEach((el) => el.classList.add("hidden"));
+      const panel = host.querySelector(id);
+      if (panel) panel.classList.remove("hidden");
+      document.querySelectorAll("#mainTabs .nav-link").forEach((b) => b.classList.remove("active"));
+      const nav = document.querySelector(`#mainTabs [data-bs-target='${id}']`);
+      if (nav) nav.classList.add("active");
+      if (id === "#tabAdmin" && role === "admin") {
+        try {
+          await refreshUsers();
+        } catch (err) {
+          showToast(err.message || "Could not refresh user list", "danger");
+        }
+      }
+      if (id === "#tabFolders") {
+        try {
+          await refreshFolderLists();
+        } catch (err) {
+          showToast(err.message || "Could not load folders", "danger");
+        }
+      }
+      if (id === "#tabUserSubmissions" && role === "user") {
+        try {
+          await refreshUserSubmittedList();
+        } catch (err) {
+          showToast(err.message || "Could not load submissions", "danger");
+        }
+      }
+      if (id === "#tabReview" && (role === "reviewer" || role === "admin")) {
+        try {
+          await refreshReviewQueue();
+        } catch (err) {
+          showToast(err.message || "Could not load review queue", "danger");
+        }
+      }
+    }
+
+    document.querySelectorAll("#mainTabs .nav-link").forEach((btn) => {
+      btn.onclick = async () => {
+        await switchTab(btn.dataset.bsTarget);
+      };
+    });
+
+    function showToast(message, variant = "info") {
+      const stack = document.getElementById("toastStack");
+      const el = document.createElement("div");
+      el.className = "app-toast app-toast--" + variant;
+      el.textContent = message;
+      stack.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("app-toast--show"));
+      const ms = Math.min(12000, 3500 + Math.min(message.length * 40, 8000));
+      setTimeout(() => {
+        el.classList.remove("app-toast--show");
+        setTimeout(() => el.remove(), 320);
+      }, ms);
+    }
+
+    function showAppChrome(show) {
+      document.getElementById("navHome").classList.toggle("hidden", !show);
+      document.getElementById("btnChangePw").classList.toggle("hidden", !show);
+      document.getElementById("logoutBtn").classList.toggle("hidden", !show);
+    }
+
+    function esc(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function fmtIso(iso) {
+      if (!iso) return "—";
+      try {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return String(iso);
+        return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+      } catch {
+        return String(iso);
+      }
+    }
+
+    function auditActionLabel(action) {
+      const m = {
+        create_batch: "Batch created",
+        upload_images: "Images uploaded",
+        submit_for_review: "Submitted for review",
+        review_pass: "Review: accepted",
+        review_reanalyze: "Review: re-analysis requested",
+        review_reject: "Review: rejected",
+        analyze_batch: "Analysis completed",
+        admin_update_batch: "Admin: batch metadata updated",
+        admin_delete_batch: "Admin: batch deleted",
+      };
+      return m[action] || action;
+    }
+
+    function renderAuditTimeline(logs) {
+      if (!logs || !logs.length) {
+        return '<p class="small text-secondary mb-0">No activity recorded for this batch yet.</p>';
+      }
+      return logs
+        .map((log) => {
+          const det = log.details || {};
+          const comRaw = det.comments != null ? String(det.comments).trim() : "";
+          const com = comRaw ? esc(comRaw) : "";
+          const bits = [];
+          if (log.action === "analyze_batch") {
+            if (det.total_cells != null) bits.push(`Batch cells: ${esc(String(det.total_cells))}`);
+            if (det.images != null) bits.push(`Images analyzed: ${esc(String(det.images))}`);
+          }
+          if (log.action === "upload_images" && det.count != null) bits.push(`Files: ${esc(String(det.count))}`);
+          const tail = bits.length ? bits.join(" · ") : "";
+          const noteLine =
+            com && tail ? `${com}<br><span class="opacity-75">${tail}</span>` : com || tail;
+          return `<div class="review-activity-row">
+        <div class="fw-semibold">${esc(auditActionLabel(log.action))}</div>
+        <div class="review-activity-meta">${esc(fmtIso(log.timestamp))} · ${esc(log.username || "—")} <span class="text-secondary">(${esc(log.role || "—")})</span></div>
+        ${noteLine ? `<div class="small mt-1">${noteLine}</div>` : ""}
+      </div>`;
+        })
+        .join("");
+    }
+
+    let wizardBatchId = null;
+    let resultsBatchId = null;
+    let reviewTargetBatchId = null;
+    let cachedBatches = [];
+    let pendingSubmit = null;
+
+    function showLanding() {
+      document.getElementById("landingView").classList.remove("hidden");
+      document.getElementById("workspaceView").classList.add("hidden");
+      void refreshLandingCards();
+    }
+
+    function showWorkspace() {
+      document.getElementById("landingView").classList.add("hidden");
+      document.getElementById("workspaceView").classList.remove("hidden");
+    }
+
+    async function refreshLandingCards() {
+      if (role === "admin") {
+        await refreshAdminLanding();
+        return;
+      }
+      if (role === "reviewer") {
+        await refreshReviewerKpis();
+        return;
+      }
+      const blurb = document.getElementById("landingReviewBlurb");
+      const cnt = document.getElementById("landingReviewCount");
+      if (!cnt) return;
+      try {
+        const batches = await api("/batches");
+        const n = batches.filter((b) => b.status === "submitted").length;
+        if (blurb) blurb.textContent = "See result tables and overlay images for batches waiting on a reviewer.";
+        cnt.textContent = `${n} awaiting decision`;
+      } catch (e) {
+        cnt.textContent = "—";
+      }
+    }
+
+    async function refreshAdminLanding() {
+      if (role !== "admin") return;
+      try {
+        const s = await api("/dashboard/summary");
+        const ibs = (s.admin && s.admin.images_by_batch_status) || {};
+        const acc = Number(ibs.passed) || 0;
+        const rej = Number(ibs.rejected) || 0;
+        const pendingKeys = ["created", "uploaded", "analyzed", "submitted", "reanalysis_required"];
+        const pend = pendingKeys.reduce((a, k) => a + (Number(ibs[k]) || 0), 0);
+        const elA = document.getElementById("adminLandStatAccepted");
+        const elP = document.getElementById("adminLandStatPending");
+        const elR = document.getElementById("adminLandStatRejected");
+        if (elA) elA.textContent = String(acc);
+        if (elP) elP.textContent = String(pend);
+        if (elR) elR.textContent = String(rej);
+      } catch (_) {}
+      try {
+        await refreshUsers();
+      } catch (_) {}
+      try {
+        await refreshAdminLandingDataTable();
+      } catch (_) {}
+    }
+
+    async function refreshAdminLandingDataTable() {
+      if (role !== "admin") return;
+      const wrap = document.getElementById("adminLandingDataWrap");
+      if (!wrap) return;
+      const batches = await api("/batches");
+      cachedBatches = batches;
+      const sorted = [...batches].sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+      const rows = sorted.slice(0, 80).map((b) => {
+        const st = b.status || "";
+        const bid = b._id || "";
+        const codeJs = JSON.stringify(b.batch_code || "");
+        return `
+        <tr>
+          <td class="mono">${esc(b.batch_code || "")}</td>
+          <td>${esc(b.batch_name || "")}</td>
+          <td><span class="badge bg-secondary badge-status">${esc(st)}</span></td>
+          <td class="small">${esc(String(b.total_cells ?? "—"))}</td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="openReadonlyBatchView('${bid}')">View</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="adminOpenEditBatch('${bid}')">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="adminDeleteBatch('${bid}', ${codeJs})">Delete</button>
+          </td>
+        </tr>`;
+      }).join("");
+      wrap.innerHTML = `
+        <table class="table table-app table-sm align-middle">
+          <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Cells</th><th>Actions</th></tr></thead>
+          <tbody>${rows || "<tr><td colspan='5' class='text-secondary'>No batches</td></tr>"}</tbody>
+        </table>`;
+    }
+
+    async function adminOpenEditBatch(batchId) {
+      let b = (cachedBatches || []).find((x) => x._id === batchId);
+      if (!b) {
+        try {
+          const batches = await api("/batches");
+          cachedBatches = batches;
+          b = batches.find((x) => x._id === batchId);
+        } catch (_) {}
+      }
+      if (!b) {
+        showToast("Could not load batch.", "danger");
+        return;
+      }
+      document.getElementById("adminEditBatchId").value = batchId;
+      document.getElementById("adminEditBatchCode").value = b.batch_code || "";
+      document.getElementById("adminEditBatchName").value = b.batch_name || "";
+      document.getElementById("adminEditSampleId").value = b.sample_id || "";
+      document.getElementById("adminEditDescription").value = b.description || "";
+      document.getElementById("adminEditSampleDesc").value = b.sample_description || "";
+      document.getElementById("modalAdminEditBatch").classList.remove("hidden");
+    }
+
+    async function refreshFolderLists() {
+      const batches = await api("/batches");
+      cachedBatches = batches;
+      const completed = batches.filter((b) => b.status === "passed");
+      const rejected = batches.filter((b) => b.status === "rejected");
+      const rean = batches.filter((b) => b.status === "reanalysis_required");
+      const mk = (arr) =>
+        arr.length
+          ? arr
+              .map(
+                (b) => `
+        <div class="card-app p-2 mb-2">
+          <div class="fw-semibold">${esc(b.batch_code)}</div>
+          <div class="small text-secondary">${esc(b.batch_name)}</div>
+          <button type="button" class="btn btn-sm btn-outline-info mt-2" onclick="openReadonlyBatchView('${b._id}')">View details</button>
+        </div>`
+              )
+              .join("")
+          : "<p class='text-secondary small mb-0'>None</p>";
+      document.getElementById("folderCompleted").innerHTML = mk(completed);
+      document.getElementById("folderRejected").innerHTML = mk(rejected);
+      document.getElementById("folderReanalysis").innerHTML = mk(rean);
+    }
+
+    function setWizardStep(n) {
+      ["wizPage0", "wizPage1", "wizPage2"].forEach((id, i) => {
+        document.getElementById(id).classList.toggle("hidden", i !== n);
+      });
+      document.querySelectorAll("#wizardStepLabels span").forEach((sp, i) => {
+        sp.classList.toggle("active", i === n);
+      });
+    }
+
+    function parseCellCount(raw) {
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0) return null;
+      return Math.floor(n);
+    }
+
+    function animateLiveCountSpan(el, target, opts = {}) {
+      const stagger = opts.rowStagger ?? 0;
+      const n = Math.max(0, Math.floor(Number(target)) || 0);
+      const startAnim = () => {
+        el.textContent = "0";
+        if (n === 0) return;
+        if (n <= 40) {
+          let k = 0;
+          const stepMs = Math.max(32, Math.min(52, Math.floor(820 / Math.max(n, 1))));
+          const timer = setInterval(() => {
+            k += 1;
+            el.textContent = String(Math.min(k, n));
+            if (k >= n) clearInterval(timer);
+          }, stepMs);
+        } else {
+          const duration = 1050;
+          const t0 = performance.now();
+          function tick(now) {
+            const t = Math.min(1, (now - t0) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = String(Math.round(eased * n));
+            if (t < 1) requestAnimationFrame(tick);
+            else el.textContent = String(n);
+          }
+          requestAnimationFrame(tick);
+        }
+      };
+      if (stagger > 0) setTimeout(startAnim, stagger);
+      else startAnim();
+    }
+
+    function runLiveCountAnimations(scopeSelector) {
+      const root = document.querySelector(scopeSelector);
+      if (!root) return;
+      root.querySelectorAll(".js-live-count").forEach((span, idx) => {
+        const t = parseCellCount(span.getAttribute("data-target"));
+        if (t === null) return;
+        animateLiveCountSpan(span, t, { rowStagger: idx * 72 });
+      });
+    }
+
+    function absReportUrl(rel) {
+      if (!rel) return "";
+      const s = String(rel);
+      if (s.startsWith("http://") || s.startsWith("https://")) return s;
+      const base = window.location.origin;
+      return base + (s.startsWith("/") ? s : "/" + s);
+    }
+
+    function openImageLightbox(src, caption) {
+      if (!src) return;
+      const img = document.getElementById("imageLightboxImg");
+      const cap = document.getElementById("imageLightboxCap");
+      img.src = src;
+      img.alt = caption || "Overlay preview";
+      cap.textContent = caption || "";
+      document.getElementById("imageLightbox").classList.remove("hidden");
+    }
+
+    function closeImageLightbox() {
+      const lb = document.getElementById("imageLightbox");
+      const img = document.getElementById("imageLightboxImg");
+      lb.classList.add("hidden");
+      img.src = "";
+    }
+
+    let pdfViewerObjectUrl = null;
+    function revokePdfViewerUrl() {
+      if (pdfViewerObjectUrl) {
+        URL.revokeObjectURL(pdfViewerObjectUrl);
+        pdfViewerObjectUrl = null;
+      }
+    }
+    function closePdfViewer() {
+      const ov = document.getElementById("pdfViewerOverlay");
+      const frame = document.getElementById("pdfViewerFrame");
+      if (frame) frame.src = "about:blank";
+      if (ov) ov.classList.add("hidden");
+      revokePdfViewerUrl();
+    }
+    async function openAnalysisPdf(archiveId) {
+      if (!archiveId) {
+        showToast("No analysis archive id for PDF.", "warning");
+        return;
+      }
+      try {
+        const res = await fetch(API + "/archive/analysis-report/" + encodeURIComponent(archiveId) + "/pdf", {
+          headers: { ...authHeaders() },
+        });
+        if (!res.ok) {
+          const raw = await res.text();
+          let msg = raw;
+          try {
+            msg = JSON.parse(raw).detail || raw;
+          } catch (_) {}
+          throw new Error(typeof msg === "string" ? msg : "Could not load PDF");
+        }
+        const blob = await res.blob();
+        revokePdfViewerUrl();
+        pdfViewerObjectUrl = URL.createObjectURL(blob);
+        const frame = document.getElementById("pdfViewerFrame");
+        frame.src = pdfViewerObjectUrl;
+        document.getElementById("pdfViewerOverlay").classList.remove("hidden");
+      } catch (e) {
+        showToast(e.message || "PDF failed", "danger");
+      }
+    }
+
+    function fillResultsTable(outputs, batch, reportExtra) {
+      const meta = document.getElementById("resultsBatchMeta");
+      const si = (batch && batch.sample_id) ? esc(batch.sample_id) : "—";
+      const sd = (batch && batch.sample_description) ? esc(batch.sample_description) : "—";
+      let reportHtml = "";
+      if (reportExtra && (reportExtra.archive_id || reportExtra.analysis_report_url)) {
+        const n = reportExtra.analysis_run_number;
+        const runLbl = n != null ? `<strong>#${esc(String(n))}</strong>` : "";
+        const pdfBtn =
+          reportExtra.archive_id != null && reportExtra.archive_id !== ""
+            ? `<button type="button" class="btn btn-sm btn-outline-info ms-1 js-open-analysis-pdf" data-archive-id="${esc(String(reportExtra.archive_id))}">View PDF report</button>`
+            : "";
+        const jsonLink =
+          reportExtra.analysis_report_url
+            ? `<a class="link-light small ms-1" href="${esc(absReportUrl(reportExtra.analysis_report_url))}" target="_blank" rel="noopener noreferrer">Open JSON</a>`
+            : "";
+        reportHtml = `<br><span class="small">Analysis report ${runLbl} — </span>${pdfBtn}${jsonLink}`;
+      }
+      meta.innerHTML = `<strong>${esc((batch && batch.batch_code) || "")}</strong> · ${esc((batch && batch.batch_name) || "")}<br><span class="small">Sample ID: ${si} · Details: ${sd}</span>${reportHtml}`;
+      const head = "<thead><tr><th>Image</th><th>Cell count</th></tr></thead>";
+      const body =
+        "<tbody>" +
+        (outputs || [])
+          .map((o) => {
+            const n = parseCellCount(o.cell_count);
+            const countCell =
+              n === null
+                ? `<td>${esc(String(o.cell_count))}</td>`
+                : `<td><span class="js-live-count tabular-nums" data-target="${n}">0</span></td>`;
+            return `<tr><td>${esc(o.filename)}</td>${countCell}</tr>`;
+          })
+          .join("") +
+        "</tbody>";
+      document.getElementById("resultsTable").innerHTML = head + body;
+    }
+
+    function fillResultsImages(outputs) {
+      const root = document.getElementById("resultsImages");
+      root.innerHTML = (outputs || [])
+        .map((o, idx) => {
+          const heat = o.heatmap_url || "";
+          const cap = o.filename || "";
+          return `<div class="col-12 mb-4 result-live-reveal" style="--reveal-delay:${idx * 85}ms">
+            <div class="small text-secondary mb-2">${esc(o.filename)} <span class="text-muted">· click image to enlarge</span></div>
+            ${heat ? `<img class="result-img-lg img-zoomable" src="${heat}" alt="${esc(cap)}" data-caption="${esc(cap)}" />` : `<span class="small text-secondary">No overlay available</span>`}
+          </div>`;
+        })
+        .join("");
+    }
+
+    function playResultsLiveAnimations() {
+      requestAnimationFrame(() => runLiveCountAnimations("#resultsTable"));
+    }
+
+    function closeResultsOverlay() {
+      document.getElementById("resultsOverlay").classList.add("hidden");
+      document.getElementById("btnSendFromResults").classList.remove("hidden");
+    }
+
+    async function openReadonlyBatchView(batchId) {
+      let batch;
+      try {
+        batch = await api(`/batches/${batchId}`);
+        const list = await api("/batches");
+        cachedBatches = list;
+      } catch (e) {
+        showToast(e.message || "Batch not found", "danger");
+        return;
+      }
+      const imgs = await api(`/batches/${batchId}/images`);
+      const outputs = imgs.map((i) => ({
+        filename: i.filename,
+        cell_count: (i.analysis || {}).cell_count ?? "—",
+        heatmap_url: (i.analysis || {}).heatmap_url,
+      }));
+      let reportExtra = null;
+      try {
+        const hist = await api(`/archive/analysis-history?limit=30&batch_id=${encodeURIComponent(batchId)}`);
+        const latest = hist && hist[0];
+        if (latest && latest._id) {
+          reportExtra = {
+            archive_id: latest._id,
+            analysis_report_url: latest.analysis_report_url,
+            analysis_run_number: latest.analysis_run_number,
+          };
+        }
+      } catch (_) {}
+      resultsBatchId = batchId;
+      document.getElementById("btnSendFromResults").classList.add("hidden");
+      fillResultsTable(outputs, batch, reportExtra);
+      fillResultsImages(outputs);
+      document.getElementById("resultsOverlay").classList.remove("hidden");
+      playResultsLiveAnimations();
+    }
+
+    async function openReviewModal(batchId) {
+      reviewTargetBatchId = batchId;
+      let imgs;
+      let logs;
+      let batch;
+      try {
+        const [batchDoc, imgRes, logRes] = await Promise.all([
+          api(`/batches/${batchId}`),
+          api(`/batches/${batchId}/images`),
+          api(`/audit/${batchId}`),
+        ]);
+        batch = batchDoc;
+        imgs = imgRes;
+        logs = logRes;
+        if (!batch) {
+          showToast("Could not load batch. Try refreshing the queue.", "danger");
+          return;
+        }
+        const si = (batch && batch.sample_id) ? esc(batch.sample_id) : "—";
+        const sd = (batch && batch.sample_description) ? esc(batch.sample_description) : "—";
+        const subName = esc(batch.created_by_username || batch.submitter_username || "—");
+        const subAt = batch.submitted_at ? fmtIso(batch.submitted_at) : "—";
+        const assignee = batch.assigned_reviewer_username
+          ? esc(batch.assigned_reviewer_username)
+          : '<span class="text-muted">Any reviewer</span>';
+        const imgN = imgs.length;
+        const cells = batch.total_cells != null ? esc(String(batch.total_cells)) : "—";
+        document.getElementById("reviewBatchMeta").innerHTML = `<strong>${esc(batch.batch_code)}</strong> · ${esc(batch.batch_name)}
+          <span class="badge bg-secondary ms-2">${esc(batch.status || "")}</span><br>
+          <span class="small">Sample ID: ${si} · ${sd}</span><br>
+          <span class="small mt-1 d-inline-block"><span class="text-secondary">Submitted by (operator):</span> ${subName}
+          · <span class="text-secondary">Assigned reviewer:</span> ${assignee}
+          · <span class="text-secondary">Submitted:</span> ${esc(subAt)}
+          · <span class="text-secondary">Images:</span> ${imgN} · <span class="text-secondary">Cells (batch total):</span> ${cells}</span>`;
+        document.getElementById("reviewActivityLog").innerHTML = renderAuditTimeline(logs);
+      } catch (err) {
+        showToast(err.message || "Could not load review data", "danger");
+        return;
+      }
+      const head = "<thead><tr><th>Image</th><th>Cells</th></tr></thead><tbody>";
+      const rows = imgs
+        .map((i) => {
+          const c = (i.analysis || {}).cell_count ?? "—";
+          const n = parseCellCount(c);
+          const countCell =
+            n === null ? `<td>${esc(String(c))}</td>` : `<td><span class="js-live-count tabular-nums" data-target="${n}">0</span></td>`;
+          return `<tr><td>${esc(i.filename)}</td>${countCell}</tr>`;
+        })
+        .join("");
+      document.getElementById("reviewTable").innerHTML = head + rows + "</tbody>";
+      document.getElementById("reviewImages").innerHTML = imgs
+        .map((i, idx) => {
+          const heat = (i.analysis || {}).heatmap_url || "";
+          const cap = i.filename || "";
+          return heat
+            ? `<div class="col-12 mb-4 result-live-reveal" style="--reveal-delay:${idx * 85}ms"><div class="small text-secondary mb-2">${esc(i.filename)} · click image to enlarge</div><img class="result-img-lg img-zoomable" src="${heat}" alt="${esc(cap)}" data-caption="${esc(cap)}" /></div>`
+            : "";
+        })
+        .join("");
+      document.getElementById("reviewRemark").value = "";
+      document.getElementById("revSigUser").value = currentUsername;
+      document.getElementById("revSigPass").value = "";
+      document.getElementById("revSigMeaning").value = "";
+      document.getElementById("revSigReason").value = "";
+      document.getElementById("reviewOverlay").classList.remove("hidden");
+      requestAnimationFrame(() => runLiveCountAnimations("#reviewTable"));
+    }
+
+    async function submitReviewDecision(decision) {
+      const remark = document.getElementById("reviewRemark").value.trim();
+      if (remark.length < 10) {
+        showToast("Enter a decision comment (at least 10 characters).", "warning");
+        return;
+      }
+      const sigUser = document.getElementById("revSigUser").value.trim();
+      const sigPass = document.getElementById("revSigPass").value;
+      const sigMeaning = document.getElementById("revSigMeaning").value.trim();
+      const sigReason = document.getElementById("revSigReason").value.trim();
+      if (!sigUser || !sigPass || sigMeaning.length < 5 || sigReason.length < 5) {
+        showToast("Complete all electronic signature fields (meaning & reason min 5 chars).", "warning");
+        return;
+      }
+      const fd = new FormData();
+      fd.append("decision", decision);
+      fd.append("comments", remark);
+      fd.append("signature_username", sigUser);
+      fd.append("signature_password", sigPass);
+      fd.append("signature_meaning", sigMeaning);
+      fd.append("signature_reason", sigReason);
+      try {
+        await api(`/review/${reviewTargetBatchId}/decision`, { method: "POST", body: fd });
+        showToast("Decision recorded.", "success");
+        document.getElementById("reviewOverlay").classList.add("hidden");
+        await refreshReviewQueue();
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshFolderLists();
+        await refreshLandingCards();
+        await refreshNotifications();
+      } catch (err) {
+        showToast(err.message || "Review failed", "danger");
+      }
+    }
+
+    const PIPELINE_STATUS_ORDER = [
+      "created",
+      "uploaded",
+      "analyzed",
+      "submitted",
+      "passed",
+      "reanalysis_required",
+      "rejected",
+    ];
+    const PIPELINE_LABELS = {
+      created: "Created",
+      uploaded: "Uploaded",
+      analyzed: "Analyzed",
+      submitted: "With reviewer",
+      passed: "Accepted",
+      reanalysis_required: "Re-analysis",
+      rejected: "Rejected",
+    };
+
+    function renderPipelineVisualization(statusCounts, mountId) {
+      const el = document.getElementById(mountId || "kpiStatusViz");
+      if (!el) return;
+      const sc = statusCounts && typeof statusCounts === "object" ? statusCounts : {};
+      const total = PIPELINE_STATUS_ORDER.reduce((acc, k) => acc + (Number(sc[k]) || 0), 0);
+      if (total === 0) {
+        el.innerHTML =
+          '<p class="text-secondary small mb-0 py-1">No batches yet. Run the guided workflow to see your pipeline fill in here.</p>';
+        return;
+      }
+      const entries = PIPELINE_STATUS_ORDER.filter((k) => (Number(sc[k]) || 0) > 0).map((k) => ({
+        key: k,
+        count: Number(sc[k]) || 0,
+        label: PIPELINE_LABELS[k] || k,
+      }));
+      const segments = entries
+        .map((e) => {
+          const pct = ((100 * e.count) / total).toFixed(2);
+          return `<span class="pipeline-seg pipeline-seg--${e.key}" style="width:${pct}%" title="${esc(e.label)}: ${e.count}"></span>`;
+        })
+        .join("");
+      const legend = entries
+        .map(
+          (e) => `<div class="pipeline-legend-item">
+            <span class="pipeline-dot pipeline-dot--${e.key}" aria-hidden="true"></span>
+            <span>${esc(e.label)}</span>
+            <span class="pipeline-count">${e.count}</span>
+          </div>`
+        )
+        .join("");
+      el.innerHTML = `<div class="pipeline-bar">${segments}</div><div class="pipeline-legend">${legend}</div>`;
+    }
+
+    function renderAdminMasterDashboard(s) {
+      const adm = s.admin;
+      if (!adm) return;
+      const kb = document.getElementById("adminKpiBatches");
+      const ki = document.getElementById("adminKpiImages");
+      const ku = document.getElementById("adminKpiUsers");
+      const ur = document.getElementById("adminUsersByRole");
+      if (kb) kb.textContent = String(s.total_batches ?? 0);
+      if (ki) ki.textContent = String(s.total_images ?? 0);
+      if (ku) ku.textContent = String(adm.total_users ?? 0);
+      if (ur) {
+        const roles = adm.users_by_role && typeof adm.users_by_role === "object" ? adm.users_by_role : {};
+        const order = ["admin", "reviewer", "user"];
+        const labels = { admin: "Admins", reviewer: "Reviewers", user: "Operators" };
+        ur.innerHTML =
+          order
+            .filter((r) => Number(roles[r]) > 0)
+            .map((r) => `<span class="admin-role-chip">${labels[r] || r}<span>${roles[r]}</span></span>`)
+            .join("") || "<span class='small text-secondary'>No users</span>";
+      }
+      renderPipelineVisualization(s.status_counts || {}, "adminBatchPipelineViz");
+      renderPipelineVisualization(adm.images_by_batch_status || {}, "adminImagePipelineViz");
+      const wrap = document.getElementById("adminRecentBatchesWrap");
+      if (!wrap) return;
+      const rows = (adm.recent_batches || [])
+        .map((b) => {
+          const st = esc(b.status || "—");
+          const code = esc(b.batch_code || "");
+          const bid = b._id || "";
+          const codeJs = JSON.stringify(b.batch_code || "");
+          return `
+        <tr>
+          <td class="mono">${code}</td>
+          <td>${esc(b.batch_name || "")}</td>
+          <td><span class="badge bg-secondary badge-status">${st}</span></td>
+          <td class="small text-secondary">${esc(String(b.total_cells ?? "—"))}</td>
+          <td class="small text-secondary">${esc(b.created_by_username || "—")}</td>
+          <td class="small text-secondary text-nowrap">${esc(b.updated_at || "—")}</td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="openReadonlyBatchView('${bid}')">View</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="adminOpenEditBatch('${bid}')">Edit</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="adminDeleteBatch('${bid}', ${codeJs})">Delete</button>
+          </td>
+        </tr>`;
+        })
+        .join("");
+      wrap.innerHTML = `
+        <table class="table table-app table-sm align-middle">
+          <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Cells</th><th>Owner</th><th>Updated</th><th>Actions</th></tr></thead>
+          <tbody>${rows || "<tr><td colspan='7' class='text-secondary'>No batches</td></tr>"}</tbody>
+        </table>`;
+    }
+
+    async function adminDeleteBatch(batchId, batchCode) {
+      const label = batchCode || batchId;
+      if (!confirm(`Delete batch "${label}"? This removes all images, notifications, archives, and audit logs for this batch and deletes upload folders.`)) return;
+      try {
+        await api(`/admin/batches/${batchId}`, { method: "DELETE" });
+        showToast("Batch deleted.", "success");
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshLandingCards();
+        await refreshFolderLists();
+        await refreshReviewQueue();
+      } catch (err) {
+        showToast(err.message || "Delete failed", "danger");
+      }
+    }
+
+    async function adminResetUserPassword(userId, username) {
+      if (!confirm(`Generate a temporary password for "${username}"? They must change it after login.`)) return;
+      try {
+        const fd = new FormData();
+        fd.append("generate_temporary_password", "true");
+        const id = String(userId == null ? "" : userId).trim();
+        if (!id) {
+          showToast("Invalid user id — refresh the page and try again.", "danger");
+          return;
+        }
+        const r = await api(`/admin/users/${encodeURIComponent(id)}/reset-password`, { method: "POST", body: fd });
+        const tmp = r.temporary_password;
+        showToast(
+          tmp
+            ? `Temporary password for ${username}:\n${tmp}\n\nCopy now; it will not be shown again.`
+            : r.message || "Password updated.",
+          tmp ? "info" : "success"
+        );
+        await refreshUsers();
+      } catch (err) {
+        showToast(err.message || "Reset failed", "danger");
+      }
+    }
+
+    async function refreshReviewerKpis() {
+      if (role !== "reviewer") return;
+      try {
+        const st = await api("/review/stats");
+        const set = (id, v) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = String(v ?? 0);
+        };
+        set("landingRevPending", st.pending);
+        set("landingRevAccepted", st.accepted);
+        set("landingRevRejected", st.rejected);
+        set("landingRevReanalysis", st.reanalysis);
+        set("wsRevPending", st.pending);
+        set("wsRevAccepted", st.accepted);
+        set("wsRevRejected", st.rejected);
+        set("wsRevReanalysis", st.reanalysis);
+        const rp = document.getElementById("reviewStatPending");
+        if (rp) rp.textContent = String(st.pending ?? 0);
+      } catch (_) {}
+    }
+
+    async function refreshDashboard() {
+      const s = await api("/dashboard/summary");
+      const isAdmin = role === "admin" && s.admin;
+      document.getElementById("kpiRowReviewer")?.classList.toggle("hidden", role !== "reviewer");
+      document.getElementById("kpiRowStandard")?.classList.toggle("hidden", !!isAdmin || role === "reviewer");
+      document.getElementById("adminMasterRoot")?.classList.toggle("hidden", !isAdmin);
+      if (role === "reviewer") {
+        await refreshReviewerKpis();
+        renderPipelineVisualization({}, "kpiStatusViz");
+        return;
+      }
+      if (isAdmin) {
+        renderAdminMasterDashboard(s);
+        return;
+      }
+      document.getElementById("kpiBatches").textContent = s.total_batches;
+      document.getElementById("kpiImages").textContent = s.total_images;
+      renderPipelineVisualization(s.status_counts || {}, "kpiStatusViz");
+    }
+
+    function batchActionButtons(b) {
+      const st = b.status || "";
+      if (st === "passed" || st === "rejected") {
+        return `<button type="button" class="btn btn-sm btn-outline-info" onclick="openReadonlyBatchView('${b._id}')">View (read-only)</button>`;
+      }
+      if (st === "submitted") {
+        return `<span class="small text-secondary">With reviewer</span> <button type="button" class="btn btn-sm btn-outline-info" onclick="openReadonlyBatchView('${b._id}')">View</button>`;
+      }
+      const core = `
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="uploadPrompt('${b._id}')">Upload</button>
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="analyzeBatch('${b._id}')">Analyze</button>
+        <button type="button" class="btn btn-sm btn-outline-light" onclick="submitBatch('${b._id}')">Submit</button>
+        <button type="button" class="btn btn-sm btn-outline-info" onclick="showImages('${b._id}')">Images</button>`;
+      return core;
+    }
+
+    function applyRoleUi() {
+      const ws = document.getElementById("workspaceView");
+      const tools = document.getElementById("btnOpenTools");
+      const revLi = document.querySelector("[data-bs-target='#tabReview']")?.parentElement;
+      const admLi = document.querySelector("[data-bs-target='#tabAdmin']")?.parentElement;
+      const subLi = document.getElementById("navItemUserSubmissions");
+      const landStd = document.getElementById("landingStandard");
+      const landAdm = document.getElementById("landingAdmin");
+      if (role === "user") {
+        ws.classList.add("workspace-user-role");
+        tools.classList.add("hidden");
+        document.getElementById("landingToolsHint")?.classList.add("hidden");
+        revLi?.classList.add("hidden");
+        admLi?.classList.add("hidden");
+        subLi?.classList.remove("hidden");
+        landStd?.classList.remove("hidden");
+        landAdm?.classList.add("hidden");
+        setUserWorkspaceDefaultTab();
+      } else {
+        ws.classList.remove("workspace-user-role");
+        ws.classList.toggle("workspace-reviewer-role", role === "reviewer");
+        tools.classList.toggle("hidden", role === "reviewer");
+        document.getElementById("landingToolsHint")?.classList.toggle("hidden", role === "reviewer");
+        revLi?.classList.toggle("hidden", !(role === "reviewer" || role === "admin"));
+        admLi?.classList.toggle("hidden", role !== "admin");
+        subLi?.classList.add("hidden");
+        resetStaffDefaultTab();
+        const landRev = document.getElementById("landingReviewer");
+        if (role === "admin") {
+          landStd?.classList.add("hidden");
+          landAdm?.classList.remove("hidden");
+          landRev?.classList.add("hidden");
+        } else if (role === "reviewer") {
+          landStd?.classList.add("hidden");
+          landAdm?.classList.add("hidden");
+          landRev?.classList.remove("hidden");
+        } else {
+          landStd?.classList.remove("hidden");
+          landAdm?.classList.add("hidden");
+          landRev?.classList.add("hidden");
+        }
+        document.querySelectorAll("#mainTabs > li.nav-item").forEach((li) => {
+          const btn = li.querySelector("[data-bs-target]");
+          const target = btn && btn.dataset ? btn.dataset.bsTarget : "";
+          if (role === "reviewer") {
+            const ok = target === "#tabReview" || target === "#tabNotify";
+            li.classList.toggle("hidden", !ok);
+          } else {
+            li.classList.remove("hidden");
+          }
+        });
+      }
+    }
+
+    function setUserWorkspaceDefaultTab() {
+      const host = document.getElementById("workspaceView");
+      if (!host) return;
+      host.querySelectorAll(":scope > div[id^='tab']").forEach((el) => {
+        el.classList.toggle("hidden", el.id !== "tabArchive");
+      });
+      host.querySelectorAll("#mainTabs .nav-link").forEach((b) => b.classList.remove("active"));
+      host.querySelector("#mainTabs [data-bs-target='#tabArchive']")?.classList.add("active");
+    }
+
+    function resetStaffDefaultTab() {
+      const host = document.getElementById("workspaceView");
+      if (!host) return;
+      if (role === "reviewer") {
+        void switchTab("#tabReview");
+        return;
+      }
+      void switchTab("#tabBatches");
+    }
+
+    async function refreshBatches() {
+      const batches = await api("/batches");
+      cachedBatches = batches;
+      if (role === "reviewer") {
+        const wrap = document.getElementById("batchTableWrap");
+        if (wrap) {
+          wrap.innerHTML =
+            "<p class='text-secondary mb-0'>Reviewers do not create batches or submit work for review. Open the <strong>Review</strong> tab for your queue.</p>";
+        }
+        return;
+      }
+      if (role === "user") return;
+      const rows = batches
+        .map((b) => {
+          const samp = b.sample_id ? `<div class="small text-secondary">Sample: ${esc(b.sample_id)}</div>` : "";
+          return `
+        <tr>
+          <td>${esc(b.batch_code)}${samp}</td>
+          <td>${esc(b.batch_name)}</td>
+          <td><span class="badge bg-secondary badge-status">${esc(b.status)}</span></td>
+          <td>${b.total_cells || 0}</td>
+          <td class="mono text-truncate" style="max-width:200px" title="${esc(b.report_path || b.rejection_report_path || "")}">${esc(b.report_path || b.rejection_report_path || "—")}</td>
+          <td class="d-flex flex-wrap gap-1">${batchActionButtons(b)}</td>
+        </tr>`;
+        })
+        .join("");
+      document.getElementById("batchTableWrap").innerHTML = `
+        <table class="table table-app table-sm align-middle">
+          <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Cells</th><th>Report</th><th>Actions</th></tr></thead>
+          <tbody>${rows || "<tr><td colspan='6'>No batches</td></tr>"}</tbody>
+        </table>`;
+    }
+
+    async function refreshUserSubmittedList() {
+      if (role !== "user") return;
+      const wrap = document.getElementById("userSubmittedWrap");
+      if (!wrap) return;
+      const batches = await api("/batches");
+      const submitted = batches
+        .filter((b) => b.status === "submitted")
+        .sort((a, b) => String(b.submitted_at || "").localeCompare(String(a.submitted_at || "")));
+      if (!submitted.length) {
+        wrap.innerHTML =
+          "<p class='text-secondary mb-0'>Nothing with the reviewer yet. After analysis, use <strong>Send to reviewer</strong> on the results screen; your batch will appear here with full tables and overlays until a decision is recorded.</p>";
+        return;
+      }
+      wrap.innerHTML = submitted
+        .map(
+          (b) => `
+        <div class="card-app p-3 mb-2">
+          <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+            <div>
+              <div class="fw-semibold">${esc(b.batch_code)}</div>
+              <div class="small text-secondary">${esc(b.batch_name)}</div>
+              ${b.sample_id ? `<div class="small text-secondary">Sample: ${esc(b.sample_id)}</div>` : ""}
+              <div class="small text-secondary mt-1">Total cells: ${esc(String(b.total_cells ?? "—"))} · Submitted: ${esc(b.submitted_at || "—")}</div>
+              ${b.assigned_reviewer_username ? `<div class="small text-info mt-1">Assigned reviewer: ${esc(b.assigned_reviewer_username)}</div>` : ""}
+            </div>
+            <button type="button" class="btn btn-sm btn-accent" onclick="openReadonlyBatchView('${b._id}')">View results &amp; overlays</button>
+          </div>
+        </div>`
+        )
+        .join("");
+    }
+
+    async function refreshArchive() {
+      const items = await api("/archive/analysis-history?limit=80");
+      if (!items.length) {
+        document.getElementById("archiveWrap").innerHTML = "<p class='text-secondary'>No analysis runs yet.</p>";
+        return;
+      }
+      document.getElementById("archiveWrap").innerHTML = items.map((a) => {
+        const imgs = (a.outputs || [])
+          .slice(0, 6)
+          .map((o) => {
+            const u = o.heatmap_url || "";
+            const fn = o.filename || "";
+            return `
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="small text-secondary text-truncate">${esc(o.filename)}</div>
+            <div class="small text-success mb-1">Count: ${esc(String(o.cell_count))}</div>
+            ${u ? `<img class="result-img mb-1 img-zoomable" src="${u}" alt="${esc(fn)}" data-caption="${esc(fn)}" />` : ""}
+          </div>`;
+          })
+          .join("");
+        const runLabel =
+          a.analysis_run_number != null && a.analysis_run_number !== undefined
+            ? ` · Report #${esc(String(a.analysis_run_number))}`
+            : "";
+        const jsonLink = a.analysis_report_url
+          ? ` <a class="link-light" href="${esc(absReportUrl(a.analysis_report_url))}" target="_blank" rel="noopener noreferrer">JSON</a>`
+          : "";
+        const pdfBtn = a._id
+          ? ` <button type="button" class="btn btn-sm btn-outline-info js-open-analysis-pdf" data-archive-id="${esc(String(a._id))}">PDF report</button>`
+          : "";
+        return `
+          <div class="timeline-item">
+            <div class="timeline-time">${a.analyzed_at}</div>
+            <div class="fw-semibold">${a.batch_code} · ${a.batch_name}</div>
+            <div class="small text-secondary mb-2">Total cells: ${a.total_cells} · Images: ${a.image_count}${runLabel} · By ${esc(a.analyzed_by_username || "?")}</div>
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">${pdfBtn}<span class="small">${jsonLink}</span></div>
+            <div class="row g-2 mt-2">${imgs}</div>
+          </div>`;
+      }).join("");
+    }
+
+    async function uploadPrompt(batchId) {
+      const picker = document.createElement("input");
+      picker.type = "file";
+      picker.multiple = true;
+      picker.accept = "image/*";
+      picker.onchange = async () => {
+        const fd = new FormData();
+        [...picker.files].forEach((f) => fd.append("files", f));
+        try {
+          await api(`/batches/${batchId}/upload`, { method: "POST", body: fd });
+          showToast("Uploaded.", "success");
+          await refreshBatches();
+          await refreshDashboard();
+        } catch (err) {
+          showToast(err.message || "Upload failed", "danger");
+        }
+      };
+      picker.click();
+    }
+
+    function renderResultCards(imgs) {
+      const root = document.getElementById("resultWrap");
+      if (!imgs.length) {
+        root.innerHTML = "<p class='text-secondary'>No images.</p>";
+        return;
+      }
+      root.innerHTML = imgs.map((i, idx) => {
+        const a = i.analysis || {};
+        const countRaw = a.cell_count ?? 0;
+        const n = parseCellCount(countRaw);
+        const countBadge =
+          n === null
+            ? `<span class="badge bg-success">Count: ${esc(String(countRaw))}</span>`
+            : `<span class="badge bg-success">Count: <span class="js-live-count tabular-nums" data-target="${n}">0</span></span>`;
+        const heatmapUrl = a.heatmap_url || "";
+        const fn = i.filename || "";
+        return `
+          <div class="col-12">
+            <div class="card-app p-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-semibold">${esc(i.filename)}</div>
+                ${countBadge}
+              </div>
+              <div class="small text-secondary mb-2">Segmentation overlay · click to enlarge</div>
+              <div class="result-live-reveal" style="--reveal-delay:${idx * 90}ms">
+              ${heatmapUrl ? `<img class="result-img-lg img-zoomable" src="${heatmapUrl}" alt="${esc(fn)}" data-caption="${esc(fn)}" />` : `<span class="small text-secondary">—</span>`}
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+      requestAnimationFrame(() => runLiveCountAnimations("#resultWrap"));
+    }
+
+    let analyzeInProgress = false;
+    async function analyzeBatch(batchId, opts = {}) {
+      if (analyzeInProgress) {
+        showToast("Analysis already running.", "warning");
+        return;
+      }
+      const showSpinner = opts.spinner !== false;
+      analyzeInProgress = true;
+      if (showSpinner) document.getElementById("analyzingOverlay").classList.remove("hidden");
+      try {
+        showToast("Analysis running — please wait.", "info");
+        const res = await api(`/batches/${batchId}/analyze`, { method: "POST" });
+        let msg = `Done. Images: ${res.images}, Total cells: ${res.total_cells}`;
+        if (res.analysis_run_number != null && res.analysis_report_url) {
+          msg += `. Report #${res.analysis_run_number} saved — ${absReportUrl(res.analysis_report_url)}`;
+        }
+        showToast(msg, "success");
+        const outputCards = (res.outputs || []).map((o) => ({
+          filename: o.filename,
+          analysis: {
+            cell_count: o.cell_count,
+            heatmap_url: o.heatmap_url,
+          },
+        }));
+        renderResultCards(outputCards);
+        document.getElementById("resultWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshArchive();
+        await refreshFolderLists();
+      } catch (err) {
+        showToast(`Analyze failed: ${err.message}`, "danger");
+      } finally {
+        if (showSpinner) document.getElementById("analyzingOverlay").classList.add("hidden");
+        analyzeInProgress = false;
+      }
+    }
+
+    async function submitBatch(batchId, opts = {}) {
+      if (role !== "user" && role !== "admin") {
+        showToast("Only operators or admins can submit batches for review.", "warning");
+        return;
+      }
+      pendingSubmit = { batchId, opts: opts || {} };
+      let reviewers;
+      try {
+        reviewers = await api("/users/reviewers");
+      } catch (err) {
+        pendingSubmit = null;
+        showToast(err.message || "Could not load reviewers", "danger");
+        return;
+      }
+      if (!reviewers.length) {
+        pendingSubmit = null;
+        showToast("No active reviewer accounts. Ask an administrator to create one.", "danger");
+        return;
+      }
+      const sel = document.getElementById("submitReviewerSelect");
+      if (role === "admin") {
+        sel.innerHTML =
+          `<option value="">Any reviewer (unassigned)</option>` +
+          reviewers.map((r) => `<option value="${esc(r._id)}">${esc(r.username)}</option>`).join("");
+      } else {
+        sel.innerHTML = reviewers.map((r) => `<option value="${esc(r._id)}">${esc(r.username)}</option>`).join("");
+      }
+      document.getElementById("modalPickReviewer").classList.remove("hidden");
+    }
+
+    async function confirmPickReviewerSubmit() {
+      if (!pendingSubmit) return;
+      const sel = document.getElementById("submitReviewerSelect");
+      const rid = (sel.value || "").trim();
+      if (role === "user" && !rid) {
+        showToast("Select a reviewer.", "warning");
+        return;
+      }
+      const fd = new FormData();
+      fd.append("assigned_reviewer_id", rid);
+      try {
+        await api(`/batches/${pendingSubmit.batchId}/submit`, { method: "POST", body: fd });
+        showToast("Submitted for review.", "success");
+        document.getElementById("modalPickReviewer").classList.add("hidden");
+        const opts = pendingSubmit.opts || {};
+        pendingSubmit = null;
+        if (opts.fromResults) {
+          closeResultsOverlay();
+          showLanding();
+        }
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshReviewQueue();
+        await refreshLandingCards();
+        await refreshReviewerKpis();
+        if (role === "user") await refreshUserSubmittedList();
+      } catch (err) {
+        showToast(err.message || "Submit failed", "danger");
+      }
+    }
+
+    async function showImages(batchId) {
+      const imgs = await api(`/batches/${batchId}/images`);
+      renderResultCards(imgs);
+      document.getElementById("resultWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+      await switchTab("#tabBatches");
+    }
+
+    async function refreshReviewQueue() {
+      if (!(role === "reviewer" || role === "admin")) return;
+      const statEl = document.getElementById("reviewStatPending");
+      const wrap = document.getElementById("reviewWrap");
+      try {
+        const q = await api("/review/queue");
+        if (statEl) statEl.textContent = String(q.length);
+        if (!wrap) return;
+        if (!q.length) {
+          wrap.innerHTML =
+            "<p class='text-secondary mb-0'>No batches awaiting review. When operators submit analyzed work, it will appear here.</p>";
+          return;
+        }
+        const rows = q
+          .map((b) => {
+            const submitted = b.submitted_at ? fmtIso(b.submitted_at) : "—";
+            const sub = esc(b.submitter_username || b.created_by_username || "—");
+            const imgs = Number(b.image_count) || 0;
+            const cells = b.total_cells != null ? esc(String(b.total_cells)) : "—";
+            const assignee = b.assigned_reviewer_username
+              ? esc(b.assigned_reviewer_username)
+              : `<span class="text-secondary">Unassigned</span>`;
+            return `<tr>
+          <td class="mono fw-semibold">${esc(b.batch_code)}</td>
+          <td>${esc(b.batch_name)}</td>
+          <td>${sub}</td>
+          <td class="small">${assignee}</td>
+          <td class="small text-nowrap">${esc(submitted)}</td>
+          <td class="tabular-nums">${imgs}</td>
+          <td class="tabular-nums">${cells}</td>
+          <td class="text-nowrap"><button type="button" class="btn btn-sm btn-accent" onclick='openReviewModal(${JSON.stringify(b._id)})'>Open review</button></td>
+        </tr>`;
+          })
+          .join("");
+        wrap.innerHTML = `<table class="table table-app table-sm align-middle mb-0">
+          <thead><tr><th>Code</th><th>Batch name</th><th>Submitted by</th><th>Assigned to</th><th>Submitted</th><th>Images</th><th>Cells</th><th></th></tr></thead>
+          <tbody>${rows}</tbody></table>`;
+      } catch (err) {
+        if (statEl) statEl.textContent = "—";
+        if (wrap) wrap.innerHTML = `<p class="text-danger small mb-0">${esc(err.message || "Could not load queue")}</p>`;
+      }
+    }
+
+    function buildUsersTableHtml(users) {
+      return `
+        <table class="table table-app table-sm">
+          <thead><tr><th>User</th><th>Role</th><th>Must change PW</th><th></th></tr></thead>
+          <tbody>${users
+            .map((u) => {
+              const roleCell =
+                u.username === currentUsername
+                  ? `<span class="badge bg-secondary">${esc(u.role)}</span>`
+                  : `<select class="form-select form-select-sm" style="min-width:7.5rem" data-user-id="${encodeURIComponent(String(u._id))}" data-username=${JSON.stringify(u.username)} data-prev="${u.role}" onfocus="this.dataset.prev=this.value" onchange="adminCommitUserRole(this)">
+                  <option value="user" ${u.role === "user" ? "selected" : ""}>Operator</option>
+                  <option value="reviewer" ${u.role === "reviewer" ? "selected" : ""}>Reviewer</option>
+                  <option value="admin" ${u.role === "admin" ? "selected" : ""}>Admin</option>
+                </select>`;
+              const actions =
+                u.username !== currentUsername
+                  ? `<button type="button" class="btn btn-sm btn-outline-warning me-1" onclick='adminResetUserPassword(${JSON.stringify(String(u._id))}, ${JSON.stringify(u.username)})'>Reset password</button><button type="button" class="btn btn-sm btn-outline-danger" onclick='deleteUser(${JSON.stringify(String(u._id))}, ${JSON.stringify(u.username)})'>Delete</button>`
+                  : "<span class='small text-secondary'>This account</span>";
+              return `<tr>
+              <td>${esc(u.username)}</td>
+              <td>${roleCell}</td>
+              <td>${u.must_change_password ? "Yes" : "No"}</td>
+              <td class="text-nowrap">${actions}</td>
+            </tr>`;
+            })
+            .join("")}</tbody>
+        </table>`;
+    }
+
+    async function adminCommitUserRole(sel) {
+      const raw = sel.getAttribute("data-user-id");
+      const userId = raw ? decodeURIComponent(raw) : sel.dataset.userId;
+      const username = sel.dataset.username || "";
+      const prev = sel.dataset.prev || sel.value;
+      const next = sel.value;
+      if (prev === next) return;
+      if (!confirm(`Change role for "${username}" from ${prev} to ${next}?`)) {
+        sel.value = prev;
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.append("role", next);
+        await api(`/admin/users/${encodeURIComponent(String(userId).trim())}/role`, { method: "PATCH", body: fd });
+        sel.dataset.prev = next;
+        showToast("Role updated.", "success");
+        await refreshUsers();
+      } catch (err) {
+        sel.value = prev;
+        showToast(err.message || "Could not update role", "danger");
+      }
+    }
+
+    async function refreshUsers() {
+      if (role !== "admin") return;
+      const users = await api("/admin/users");
+      const html = buildUsersTableHtml(users);
+      const uw = document.getElementById("usersWrap");
+      const al = document.getElementById("adminLandingUsersWrap");
+      if (uw) uw.innerHTML = html;
+      if (al) al.innerHTML = html;
+    }
+
+    async function deleteUser(userId, username) {
+      const id = String(userId == null ? "" : userId).trim();
+      if (!id) {
+        showToast("Invalid user id — refresh the page and try again.", "danger");
+        return;
+      }
+      if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+      try {
+        await api(`/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+        showToast("User deleted.", "success");
+        await refreshUsers();
+      } catch (err) {
+        showToast(err.message || "Delete failed", "danger");
+      }
+    }
+
+    async function refreshNotifications() {
+      const ns = await api("/notifications");
+      document.getElementById("notifyWrap").innerHTML =
+        ns.map((n) => `<div class="card-app p-2 mb-2 small">${n.message}<br><span class="text-secondary">${n.created_at}</span></div>`).join("") ||
+        "<p class='text-secondary'>No notifications</p>";
+    }
+
+    function enterAppShell() {
+      document.getElementById("loginSection").classList.add("hidden");
+      document.getElementById("appSection").classList.remove("hidden");
+      showAppChrome(true);
+      showLanding();
+    }
+
+    document.getElementById("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const loginUsername = String(fd.get("username") || "").trim();
+      let res;
+      let data;
+      try {
+        res = await fetch(API + "/auth/login", { method: "POST", body: fd });
+        data = await res.json().catch(() => ({}));
+      } catch (err) {
+        showToast("Network error — is the API running?", "danger");
+        return;
+      }
+      if (!res.ok) return showToast(parseDetail(data), "danger");
+      token = data.access_token;
+      role = data.role;
+      currentUsername = data.username != null ? String(data.username) : loginUsername;
+      saveSession();
+      document.getElementById("whoami").textContent = `${currentUsername} · ${role}`;
+      if (data.must_change_password) {
+        document.getElementById("mustChangeOverlay").classList.remove("hidden");
+        enterAppShell();
+        applyRoleUi();
+        await refreshDashboard();
+        return;
+      }
+      enterAppShell();
+      applyRoleUi();
+      await refreshDashboard();
+      await refreshBatches();
+      await refreshArchive();
+      await refreshReviewQueue();
+      await refreshUsers();
+      await refreshNotifications();
+      await refreshLandingCards();
+      if (role === "user") await refreshUserSubmittedList();
+    };
+
+    document.getElementById("forcedPwForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      if (fd.get("new_password") !== fd.get("new_password2")) return showToast("New passwords do not match", "warning");
+      const body = new FormData();
+      body.append("old_password", fd.get("old_password"));
+      body.append("new_password", fd.get("new_password"));
+      try {
+        await api("/auth/change-password", { method: "POST", body });
+      } catch (err) {
+        return showToast(err.message || "Password change failed", "danger");
+      }
+      document.getElementById("mustChangeOverlay").classList.add("hidden");
+      showToast("Password updated.", "success");
+      applyRoleUi();
+      await refreshDashboard();
+      await refreshBatches();
+      await refreshArchive();
+      await refreshReviewQueue();
+      await refreshUsers();
+      await refreshNotifications();
+      await refreshLandingCards();
+      if (role === "user") await refreshUserSubmittedList();
+    };
+
+    document.getElementById("btnChangePw").onclick = () => document.getElementById("modalChangePw").classList.remove("hidden");
+    document.getElementById("modalPwCancel").onclick = () => document.getElementById("modalChangePw").classList.add("hidden");
+
+    document.getElementById("voluntaryPwForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      if (fd.get("new_password") !== fd.get("new_password2")) return showToast("Passwords do not match", "warning");
+      const body = new FormData();
+      body.append("old_password", fd.get("old_password"));
+      body.append("new_password", fd.get("new_password"));
+      try {
+        await api("/auth/change-password", { method: "POST", body });
+      } catch (err) {
+        return showToast(err.message || "Password change failed", "danger");
+      }
+      document.getElementById("modalChangePw").classList.add("hidden");
+      showToast("Password updated.", "success");
+      e.target.reset();
+    };
+
+    document.getElementById("logoutBtn").onclick = () => {
+      clearStoredSession();
+      location.reload();
+    };
+
+    document.getElementById("batchForm").onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await api("/batches", { method: "POST", body: new FormData(e.target) });
+        e.target.reset();
+        showToast("Batch created.", "success");
+        await refreshBatches();
+        await refreshDashboard();
+        if (role === "admin") await refreshLandingCards();
+      } catch (err) {
+        showToast(err.message || "Could not create batch", "danger");
+      }
+    };
+
+    document.getElementById("userForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const gen = document.getElementById("genTemp").checked;
+      fd.append("generate_temporary_password", gen ? "true" : "false");
+      if (gen) fd.delete("password");
+      const newUsername = String(fd.get("username") || "").trim();
+      try {
+        const res = await api("/admin/create-user", { method: "POST", body: fd });
+        e.target.reset();
+        document.getElementById("genTemp").checked = false;
+        try {
+          await refreshUsers();
+        } catch (refreshErr) {
+          showToast(refreshErr.message || "User was created but the list could not be refreshed.", "warning");
+        }
+        if (res.temporary_password) {
+          showToast(`User created.\nTemporary password (copy now):\n${res.temporary_password}`, "success");
+        } else {
+          showToast(`User "${newUsername}" was saved; the list is up to date.`, "success");
+        }
+      } catch (err) {
+        showToast(err.message || "Could not create user", "danger");
+      }
+    };
+
+    document.getElementById("adminEditBatchForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const batchId = document.getElementById("adminEditBatchId").value;
+      const fd = new FormData();
+      fd.append("batch_name", document.getElementById("adminEditBatchName").value.trim());
+      fd.append("sample_id", document.getElementById("adminEditSampleId").value.trim());
+      fd.append("description", document.getElementById("adminEditDescription").value.trim());
+      fd.append("sample_description", document.getElementById("adminEditSampleDesc").value.trim());
+      try {
+        await api(`/admin/batches/${batchId}`, { method: "PATCH", body: fd });
+        showToast("Batch updated.", "success");
+        document.getElementById("modalAdminEditBatch").classList.add("hidden");
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshLandingCards();
+        await refreshFolderLists();
+      } catch (err) {
+        showToast(err.message || "Update failed", "danger");
+      }
+    };
+    document.getElementById("adminEditBatchCancel").onclick = () => document.getElementById("modalAdminEditBatch").classList.add("hidden");
+
+    document.getElementById("verifyForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const reportPath = new FormData(e.target).get("report_path");
+      try {
+        const res = await api(`/reports/verify?report_path=${encodeURIComponent(reportPath)}`);
+        document.getElementById("verifyResult").textContent = JSON.stringify(res, null, 2);
+        showToast("Verification complete.", "success");
+      } catch (err) {
+        document.getElementById("verifyResult").textContent = "";
+        showToast(err.message || "Verification failed", "danger");
+      }
+    };
+
+    document.getElementById("navHome").onclick = () => showLanding();
+    document.getElementById("btnBackLanding").onclick = () => showLanding();
+    document.getElementById("btnOpenTools").onclick = async () => {
+      showWorkspace();
+      try {
+        await refreshDashboard();
+      } catch (_) {}
+    };
+    document.getElementById("btnAdminOpenWorkspace").onclick = async () => {
+      showWorkspace();
+      try {
+        await refreshDashboard();
+        await refreshBatches();
+        await refreshArchive();
+        await refreshReviewQueue();
+      } catch (_) {}
+    };
+    document.getElementById("btnStartWorkflow").onclick = () => {
+      wizardBatchId = null;
+      document.getElementById("wizBatchCode").value = "";
+      document.getElementById("wizBatchName").value = "";
+      document.getElementById("wizBatchDesc").value = "";
+      document.getElementById("wizSampleId").value = "";
+      document.getElementById("wizSampleDesc").value = "";
+      document.getElementById("wizFileInput").value = "";
+      setWizardStep(0);
+      document.getElementById("wizardOverlay").classList.remove("hidden");
+    };
+    document.getElementById("wizardClose").onclick = () => {
+      document.getElementById("wizardOverlay").classList.add("hidden");
+      wizardBatchId = null;
+    };
+    document.getElementById("wizNext0").onclick = () => setWizardStep(1);
+    document.getElementById("wizBack1").onclick = () => setWizardStep(0);
+    document.getElementById("wizNext1").onclick = async () => {
+      const code = document.getElementById("wizBatchCode").value.trim();
+      const name = document.getElementById("wizBatchName").value.trim();
+      if (!code || !name) {
+        showToast("Batch code and name are required.", "warning");
+        return;
+      }
+      const fd = new FormData();
+      fd.append("batch_code", code);
+      fd.append("batch_name", name);
+      fd.append("description", document.getElementById("wizBatchDesc").value.trim());
+      fd.append("sample_id", document.getElementById("wizSampleId").value.trim());
+      fd.append("sample_description", document.getElementById("wizSampleDesc").value.trim());
+      try {
+        const res = await api("/batches", { method: "POST", body: fd });
+        wizardBatchId = res.batch_id;
+        setWizardStep(2);
+      } catch (err) {
+        showToast(err.message || "Could not create batch", "danger");
+      }
+    };
+    document.getElementById("wizBack2").onclick = () => setWizardStep(1);
+    document.getElementById("wizRunAnalyze").onclick = async () => {
+      if (analyzeInProgress) {
+        showToast("Please wait for the current run to finish.", "warning");
+        return;
+      }
+      if (!wizardBatchId) {
+        showToast("Create the batch first.", "warning");
+        return;
+      }
+      const inp = document.getElementById("wizFileInput");
+      if (!inp.files.length) {
+        showToast("Select one or more images.", "warning");
+        return;
+      }
+      analyzeInProgress = true;
+      const fd = new FormData();
+      [...inp.files].forEach((f) => fd.append("files", f));
+      document.getElementById("wizardOverlay").classList.add("hidden");
+      document.getElementById("analyzingOverlay").classList.remove("hidden");
+      try {
+        await api(`/batches/${wizardBatchId}/upload`, { method: "POST", body: fd });
+        const res = await api(`/batches/${wizardBatchId}/analyze`, { method: "POST" });
+        const batches = await api("/batches");
+        const batch = batches.find((b) => b._id === wizardBatchId);
+        resultsBatchId = wizardBatchId;
+        document.getElementById("btnSendFromResults").classList.remove("hidden");
+        fillResultsTable(res.outputs, batch || {}, {
+          archive_id: res.archive_id,
+          analysis_report_url: res.analysis_report_url,
+          analysis_run_number: res.analysis_run_number,
+        });
+        fillResultsImages(res.outputs);
+        document.getElementById("analyzingOverlay").classList.add("hidden");
+        document.getElementById("resultsOverlay").classList.remove("hidden");
+        playResultsLiveAnimations();
+        inp.value = "";
+        wizardBatchId = null;
+        await refreshBatches();
+        await refreshDashboard();
+        await refreshArchive();
+        await refreshFolderLists();
+        await refreshLandingCards();
+      } catch (err) {
+        document.getElementById("analyzingOverlay").classList.add("hidden");
+        document.getElementById("wizardOverlay").classList.remove("hidden");
+        showToast(err.message || "Upload or analysis failed", "danger");
+      } finally {
+        analyzeInProgress = false;
+      }
+    };
+    document.getElementById("resultsClose").onclick = () => closeResultsOverlay();
+    document.getElementById("resultsClose2").onclick = () => {
+      closeResultsOverlay();
+      showLanding();
+    };
+    document.getElementById("btnSendFromResults").onclick = async () => {
+      if (!resultsBatchId) return;
+      await submitBatch(resultsBatchId, { fromResults: true });
+    };
+    document.getElementById("modalPickReviewerCancel").onclick = () => {
+      pendingSubmit = null;
+      document.getElementById("modalPickReviewer").classList.add("hidden");
+    };
+    document.getElementById("modalPickReviewerOk").onclick = () => void confirmPickReviewerSubmit();
+    document.getElementById("btnReviewerOpenQueue").onclick = async () => {
+      showWorkspace();
+      try {
+        await refreshDashboard();
+      } catch (_) {}
+      await switchTab("#tabReview");
+      await refreshReviewQueue();
+    };
+    document.getElementById("reviewOverlayClose").onclick = () => document.getElementById("reviewOverlay").classList.add("hidden");
+    document.getElementById("imageLightboxClose").onclick = () => closeImageLightbox();
+    document.getElementById("imageLightbox").addEventListener("click", (ev) => {
+      if (ev.target.id === "imageLightbox") closeImageLightbox();
+    });
+    const pdfOvEl = document.getElementById("pdfViewerOverlay");
+    document.getElementById("pdfViewerClose").onclick = () => closePdfViewer();
+    if (pdfOvEl) {
+      pdfOvEl.addEventListener("click", (ev) => {
+        if (ev.target.id === "pdfViewerOverlay") closePdfViewer();
+      });
+    }
+    document.addEventListener(
+      "click",
+      (ev) => {
+        const pBtn = ev.target.closest(".js-open-analysis-pdf");
+        if (pBtn) {
+          ev.preventDefault();
+          const id = pBtn.getAttribute("data-archive-id");
+          if (id) void openAnalysisPdf(id);
+          return;
+        }
+        const zimg = ev.target.closest("img.img-zoomable");
+        if (zimg) {
+          ev.preventDefault();
+          const src = zimg.currentSrc || zimg.getAttribute("src");
+          if (!src) return;
+          const cap = zimg.getAttribute("data-caption") || zimg.getAttribute("alt") || "";
+          openImageLightbox(src, cap);
+        }
+      },
+      true
+    );
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Escape") return;
+      const pdfEl = document.getElementById("pdfViewerOverlay");
+      if (pdfEl && !pdfEl.classList.contains("hidden")) {
+        closePdfViewer();
+        return;
+      }
+      if (!document.getElementById("imageLightbox").classList.contains("hidden")) closeImageLightbox();
+    });
+    document.getElementById("btnReviewAccept").onclick = () => void submitReviewDecision("pass");
+    document.getElementById("btnReviewReject").onclick = () => void submitReviewDecision("reject");
+    document.getElementById("btnReviewReanalyze").onclick = () => void submitReviewDecision("reanalyze");
+    const btnRevDash = document.getElementById("btnReviewDashRefresh");
+    if (btnRevDash) btnRevDash.onclick = () => void refreshReviewQueue();
+
+    document.querySelectorAll(".landing-go").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const card = btn.closest(".landing-card");
+        const go = card && card.dataset ? card.dataset.go : "";
+        showWorkspace();
+        try {
+          await refreshDashboard();
+        } catch (_) {}
+        await refreshBatches();
+        if (go === "archive") {
+          await switchTab("#tabArchive");
+          await refreshArchive();
+        } else if (go === "folders") {
+          await switchTab("#tabFolders");
+        } else if (go === "review") {
+          if (role === "reviewer" || role === "admin") {
+            await switchTab("#tabReview");
+            await refreshReviewQueue();
+          } else {
+            await switchTab("#tabUserSubmissions");
+          }
+        }
+      });
+    });
+
+    void tryRestoreSession();
+
+    window.uploadPrompt = uploadPrompt;
+    window.analyzeBatch = analyzeBatch;
+    window.submitBatch = submitBatch;
+    window.showImages = showImages;
+    window.deleteUser = deleteUser;
+    window.adminDeleteBatch = adminDeleteBatch;
+    window.adminResetUserPassword = adminResetUserPassword;
+    window.adminOpenEditBatch = adminOpenEditBatch;
+    window.adminCommitUserRole = adminCommitUserRole;
+    window.openReadonlyBatchView = openReadonlyBatchView;
+    window.openReviewModal = openReviewModal;
+    window.openImageLightbox = openImageLightbox;
+    window.openAnalysisPdf = openAnalysisPdf;
+  </script>
+</body>
+</html>

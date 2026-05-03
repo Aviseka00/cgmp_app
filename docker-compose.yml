@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: cgmp_mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cgmp_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cgmp_backend
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: "change-this-in-production"
+      UVICORN_WORKERS: "1"
+      MONGODB_URI: "mongodb://admin:admin123@mongo:27017"
+      MONGODB_DB: "cgmp_cell_app"
+      UPLOADS_DIR: "/data/uploads"
+      PROCESSED_DIR: "/data/processed_images"
+      REPORTS_DIR: "/data/reports"
+      BEST_MODEL_PATH: "/models/production_model.pth"
+      CELL_DETECTION_DIR: "/opt/cell_detection"
+      MODEL_TILE: "512"
+      MODEL_STRIDE: "256"
+      MODEL_THRESHOLD: "0.5"
+    volumes:
+      - ./backend_data/uploads:/data/uploads
+      - ./backend_data/processed_images:/data/processed_images
+      - ./backend_data/reports:/data/reports
+      - ../runs_cv_full/production_model.pth:/models/production_model.pth:ro
+      - ../cell_detection:/opt/cell_detection:ro
+    networks:
+      - cgmp_net
+    depends_on:
+      - mongo
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: cgmp_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - cgmp_net
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+
+networks:
+  cgmp_net:
