@@ -18,8 +18,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/app /app/app
 COPY frontend /app/frontend
+COPY cell_detection /opt/cell_detection
 
 EXPOSE 8000
+
+# Match inference imports (see backend/app/inference.py)
+ENV CELL_DETECTION_DIR=/opt/cell_detection
 
 # Render sets PORT; default 8000 for local runs.
 ENV UVICORN_WORKERS=1

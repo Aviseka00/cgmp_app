@@ -37,7 +37,6 @@ services:
       - ./backend_data/processed_images:/data/processed_images
       - ./backend_data/reports:/data/reports
       - ../runs_cv_full/production_model.pth:/models/production_model.pth:ro
-      - ../cell_detection:/opt/cell_detection:ro
     networks:
       - cgmp_net
     depends_on:

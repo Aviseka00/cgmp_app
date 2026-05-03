@@ -7,8 +7,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 # cgmp_app/ (repository folder)
 _REPO_ROOT = _BACKEND_ROOT.parent
-# Parent of cgmp_app — workspace root when layout is .../<workspace>/cgmp_app/backend
-_WORKSPACE_ROOT = _REPO_ROOT.parent
 
 
 class Settings(BaseSettings):
@@ -23,8 +21,10 @@ class Settings(BaseSettings):
     reports_dir: str = str(_BACKEND_ROOT / "reports")
     # JSON snapshots under registry/users and registry/batches (complements MongoDB).
     registry_dir: str = str(_BACKEND_ROOT / "registry")
-    best_model_path: str = str(_WORKSPACE_ROOT / "runs_cv_full" / "production_model.pth")
-    cell_detection_dir: str = str(_WORKSPACE_ROOT / "cell_detection")
+    # Weights: use env in production. Default fits a checked-out clone with optional weights/ in the repo.
+    best_model_path: str = str(_REPO_ROOT / "weights" / "production_model.pth")
+    # Vendored inference package at repo root (see /cell_detection). Docker sets CELL_DETECTION_DIR=/opt/cell_detection.
+    cell_detection_dir: str = str(_REPO_ROOT / "cell_detection")
     model_tile: int = 512
     model_stride: int = 256
     model_threshold: float = 0.5

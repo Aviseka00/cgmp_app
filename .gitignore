@@ -17,6 +17,10 @@ build/
 .env
 !.env.example
 
+# Large model weights (optional local copy)
+weights/
+*.pth
+
 # Runtime data (do not commit)
 backend/uploads/
 backend/processed_images/
